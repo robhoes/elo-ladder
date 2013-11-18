@@ -21,6 +21,7 @@ let get_updates rating1 rating2 result =
 type player = {
 	name: string;
 	rating: float;
+	game_count: int;
 }
 
 let print_ladder players =
@@ -30,14 +31,14 @@ let print_ladder players =
 		players
 	in
 	let print_player rank (_, p) =
-		Printf.printf "%2d.  %-30s  %4d\n" (rank + 1) p.name (int_of_float p.rating)
+		Printf.printf "%2d.  %-30s  %4d  (%d)\n" (rank + 1) p.name (int_of_float p.rating) p.game_count
 	in
 	List.iteri print_player sorted
 
 let play' player1 player2 result =
 	let update1, update2 = get_updates player1.rating player2.rating result in
-	{player1 with rating = update1},
-	{player2 with rating = update2}
+	{player1 with rating = update1; game_count = player1.game_count + 1},
+	{player2 with rating = update2; game_count = player2.game_count + 1}
 
 let replace n p l =
 	let l = List.remove_assoc n l in
@@ -79,7 +80,7 @@ let read_players fname =
 		let nick = String.sub s 0 a in
 		let name = String.sub s (a + 1) (b - a - 1) in
 		let rating = String.sub s (b + 1) (n - b - 1) |> int_of_string |> float_of_int in
-		nick, {name; rating}
+		nick, {name; rating; game_count = 0}
 	in
 	let players = ref [] in
 	begin
