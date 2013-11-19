@@ -30,10 +30,13 @@ let print_ladder players =
 			compare rating2 rating1)
 		players
 	in
-	let print_player rank (_, p) =
-		Printf.printf "%2d.  %-30s  %4d  (%d)\n" (rank + 1) p.name (int_of_float p.rating) p.game_count
+	let rec print_player rank = function
+		| [] -> ()
+		| (_, p) :: tl ->
+			Printf.printf "%2d.  %-30s  %4d  (%d)\n" rank p.name (int_of_float p.rating) p.game_count;
+			print_player (rank + 1) tl
 	in
-	List.iteri print_player sorted
+	print_player 1 sorted
 
 let play' player1 player2 result =
 	let update1, update2 = get_updates player1.rating player2.rating result in
