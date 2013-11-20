@@ -133,11 +133,11 @@ open Cmdliner
 
 let players_path =
 	let doc = "Path to players file." in
-	Arg.(required & opt (some file) None & info ["p"; "players"] ~docv:"PLAYERS" ~doc)
+	Arg.(required & pos 0 (some file) None & info [] ~docv:"PLAYERS" ~doc)
 
 let games_path =
 	let doc = "Path to games file." in
-	Arg.(required & opt (some file) None & info ["g"; "games"] ~docv:"GAMES" ~doc)
+	Arg.(required & pos 1 (some file) None & info [] ~docv:"GAMES" ~doc)
 
 let cmd =
 	let doc = "Compute and print ELO ladder" in
