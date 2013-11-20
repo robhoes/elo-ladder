@@ -116,17 +116,42 @@ let read_games fname =
 	close_in f;
 	List.rev !games
 
-(* main *)
-
-let _ =
-	let players = read_players "players" in
-	let games = read_games "games" in
+let print_summary players_path games_path =
+	let players = read_players players_path in
+	let games = read_games games_path in
 
 	print_string "Games\n\n";
 	print_games players games;
 
 	print_string "\nLadder\n\n";
-	let players = play_games players games in
-	print_ladder players;
+	print_ladder (play_games players games);
 	()
 
+(* Command line interface *)
+
+open Cmdliner
+
+let players_path =
+	let doc = "Path to players file." in
+	Arg.(required & opt (some file) None & info ["p"; "players"] ~docv:"PLAYERS" ~doc)
+
+let games_path =
+	let doc = "Path to games file." in
+	Arg.(required & opt (some file) None & info ["g"; "games"] ~docv:"GAMES" ~doc)
+
+let cmd =
+	let doc = "Compute and print ELO ladder" in
+	let man = [
+		`S "DESCRIPTION";
+			`P "$(tname) computes the resulting ELO ratings for the players specified
+			    in $(i,PLAYERS) after playing the games specified in $(i,GAMES).";
+		`S "BUGS";
+			`I ("Please report bugs by opening an issue on the Elo-ladder project page
+			     on Github:", "https://github.com/robhoes/elo-ladder");
+		]
+	in
+	Term.(pure print_summary $ players_path $ games_path),
+	Term.info "ladder" ~version:"0.1a" ~doc ~man
+
+let _ =
+	match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0
