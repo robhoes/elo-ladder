@@ -120,17 +120,57 @@ let read_games fname =
 	close_in f;
 	List.rev !games
 
-(* main *)
-
-let _ =
-	let players = read_players "players" in
-	let games = read_games "games" in
+let print_summary players_path games_path =
+	let players = read_players players_path in
+	let games = read_games games_path in
 
 	print_string "Games\n\n";
 	print_games players games;
 
 	print_string "\nLadder\n\n";
-	let players = play_games players games in
-	print_ladder players;
+	print_ladder (play_games players games);
 	()
 
+(* Command line interface *)
+
+open Cmdliner
+
+let players_path =
+	let doc = "Path to players file. See $(i,FILE-FORMATS) for details." in
+	Arg.(required & pos 0 (some file) None & info [] ~docv:"PLAYERS" ~doc)
+
+let games_path =
+	let doc = "Path to games file. See $(i,FILE-FORMATS) for details." in
+	Arg.(required & pos 1 (some file) None & info [] ~docv:"GAMES" ~doc)
+
+let cmd =
+	let doc = "Compute and print ELO ladder" in
+	let man = [
+		`S "DESCRIPTION";
+			`P "$(tname) computes the resulting ELO ratings for the players
+			    specified in $(i,PLAYERS) after playing the games specified in
+			    $(i,GAMES).";
+		`S "FILE-FORMATS";
+			`P "The $(i,PLAYERS) file should be in CSV format:";
+			`I ("Syntax:", "<$(i,ID)>,<Full name>,<$(i,Elo-rating)>");
+			`P "Where $(i,ID) can be any unique string and $(i,Elo-rating) is
+			    the starting rating for the player as an integer.";
+			`I ("Example:", "magnus,Magnus Carlsen,2870");
+			`P ""; `Noblank;
+			`P "The $(i,GAMES) file should be in CSV format:";
+			`I ("Syntax:", "<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
+			`P "Where the $(i,ID)s match those listed in the $(i,PLAYERS)
+			    file and $(i,RES) is either $(i,1.), $(i,.5) or $(i,0.) in the
+			    case of a win, draw or loss for white respectively.";
+			`I ("Example:", "magnus,anand,.5");
+		`S "BUGS";
+			`I ("Please report bugs by opening an issue on the Elo-ladder
+			     project page on Github:",
+			    "https://github.com/robhoes/elo-ladder");
+		]
+	in
+	Term.(pure print_summary $ players_path $ games_path),
+	Term.info "ladder" ~version:"0.1a" ~doc ~man
+
+let _ =
+	match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0
