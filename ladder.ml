@@ -132,22 +132,37 @@ let print_summary players_path games_path =
 open Cmdliner
 
 let players_path =
-	let doc = "Path to players file." in
+	let doc = "Path to players file. See $(i,FILE-FORMATS) for details." in
 	Arg.(required & pos 0 (some file) None & info [] ~docv:"PLAYERS" ~doc)
 
 let games_path =
-	let doc = "Path to games file." in
+	let doc = "Path to games file. See $(i,FILE-FORMATS) for details." in
 	Arg.(required & pos 1 (some file) None & info [] ~docv:"GAMES" ~doc)
 
 let cmd =
 	let doc = "Compute and print ELO ladder" in
 	let man = [
 		`S "DESCRIPTION";
-			`P "$(tname) computes the resulting ELO ratings for the players specified
-			    in $(i,PLAYERS) after playing the games specified in $(i,GAMES).";
+			`P "$(tname) computes the resulting ELO ratings for the players
+			    specified in $(i,PLAYERS) after playing the games specified in
+			    $(i,GAMES).";
+		`S "FILE-FORMATS";
+			`P "The $(i,PLAYERS) file should be in CSV format:";
+			`I ("Syntax:", "<$(i,ID)>,<Full name>,<$(i,Elo-rating)>");
+			`P "Where $(i,ID) can be any unique string and $(i,Elo-rating) is
+			    the starting rating for the player as an integer.";
+			`I ("Example:", "magnus,Magnus Carlsen,2870");
+			`P ""; `Noblank;
+			`P "The $(i,GAMES) file should be in CSV format:";
+			`I ("Syntax:", "<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
+			`P "Where the $(i,ID)s match those listed in the $(i,PLAYERS)
+			    file and $(i,RES) is either $(i,1.), $(i,.5) or $(i,0.) in the
+			    case of a win, draw or loss for white respectively.";
+			`I ("Example:", "magnus,anand,.5");
 		`S "BUGS";
-			`I ("Please report bugs by opening an issue on the Elo-ladder project page
-			     on Github:", "https://github.com/robhoes/elo-ladder");
+			`I ("Please report bugs by opening an issue on the Elo-ladder
+			     project page on Github:",
+			    "https://github.com/robhoes/elo-ladder");
 		]
 	in
 	Term.(pure print_summary $ players_path $ games_path),
