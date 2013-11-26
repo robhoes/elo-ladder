@@ -24,7 +24,7 @@ type player = {
 	game_count: int;
 }
 
-let string_of_ladder players =
+let strings_of_ladder players =
 	let sorted = 
 		List.sort (fun (_, {rating=rating1}) (_, {rating=rating2}) ->
 			compare rating2 rating1)
@@ -36,7 +36,7 @@ let string_of_ladder players =
 				(int_of_float p.rating) p.game_count;
 		) sorted
 	in
-	String.concat "\n" lines
+	lines
 
 let play' player1 player2 result =
 	let update1, update2 = get_updates player1.rating player2.rating result in
@@ -54,7 +54,7 @@ let string_of_result = function
 	| 0.5 -> "0.5 - 0.5"
 	| _ -> "  0 - 1"
 
-let string_of_games players games =
+let strings_of_games players games =
 	let lines =
 		List.map (fun (nick1, nick2, result) ->
 			let player1 = List.assoc nick1 players in
@@ -63,7 +63,7 @@ let string_of_games players games =
 				(string_of_result result)
 		) games
 	in
-	String.concat "\n" lines
+	lines
 
 let play players nick1 nick2 result =
 	let player1 = List.assoc nick1 players in
@@ -134,10 +134,10 @@ let print_summary players_path games_path markdown =
 	let games = read_games games_path in
 
 	print_endline (string_of_heading "Games");
-	print_endline (string_of_games players games);
+	List.iter print_endline (strings_of_games players games);
 
 	print_endline (string_of_heading "Ladder");
-	print_endline (string_of_ladder (play_games players games));
+	List.iter print_endline (strings_of_ladder (play_games players games));
 	()
 
 (* Command line interface *)
