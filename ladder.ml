@@ -137,11 +137,11 @@ let print_summary players_path games_path markdown =
 	let players = read_players players_path in
 	let games = read_games games_path in
 
-	print_endline (string_of_heading "Games");
-	print_endline (string_of_section (strings_of_games players games));
+	print_endline (string_of_heading ~markdown "Games");
+	print_endline (string_of_section ~markdown (strings_of_games players games));
 
-	print_endline (string_of_heading "Ladder");
-	print_endline (string_of_section (strings_of_ladder (play_games players games)));
+	print_endline (string_of_heading ~markdown "Ladder");
+	print_endline (string_of_section ~markdown (strings_of_ladder (play_games players games)));
 	()
 
 (* Command line interface *)
@@ -155,6 +155,10 @@ let players_path =
 let games_path =
 	let doc = "Path to games file. See $(i,FILE-FORMATS) for details." in
 	Arg.(required & pos 1 (some file) None & info [] ~docv:"GAMES" ~doc)
+
+let markdown =
+	let doc = "Output markdown for Github pages publication of ladder." in
+	Arg.(value & flag & info ["markdown"] ~doc)
 
 let cmd =
 	let doc = "Compute and print ELO ladder" in
@@ -182,7 +186,7 @@ let cmd =
 			    "https://github.com/robhoes/elo-ladder");
 		]
 	in
-	Term.(pure print_summary $ players_path $ games_path $ pure true),
+	Term.(pure print_summary $ players_path $ games_path $ markdown),
 	Term.info "ladder" ~version:"0.1a" ~doc ~man
 
 let _ =
