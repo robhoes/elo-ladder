@@ -124,14 +124,19 @@ let read_games fname =
 	close_in f;
 	List.rev !games
 
-let print_summary players_path games_path =
+let string_of_heading ?(markdown = false) heading =
+	if markdown
+	then Printf.sprintf "### %s" heading
+	else Printf.sprintf "\n%s\n%s" heading (String.make (String.length heading) '-')
+
+let print_summary players_path games_path markdown =
 	let players = read_players players_path in
 	let games = read_games games_path in
 
-	print_string "Games\n\n";
+	print_endline (string_of_heading "Games");
 	print_endline (string_of_games players games);
 
-	print_string "\nLadder\n\n";
+	print_endline (string_of_heading "Ladder");
 	print_endline (string_of_ladder (play_games players games));
 	()
 
@@ -173,7 +178,7 @@ let cmd =
 			    "https://github.com/robhoes/elo-ladder");
 		]
 	in
-	Term.(pure print_summary $ players_path $ games_path),
+	Term.(pure print_summary $ players_path $ games_path $ pure true),
 	Term.info "ladder" ~version:"0.1a" ~doc ~man
 
 let _ =
