@@ -129,15 +129,19 @@ let string_of_heading ?(markdown = false) heading =
 	then Printf.sprintf "### %s" heading
 	else Printf.sprintf "\n%s\n%s" heading (String.make (String.length heading) '-')
 
+let string_of_section ?(markdown = false) lines =
+	let lines = if markdown then ["```"] @ lines @ ["```"] else lines in
+	String.concat "\n" lines
+
 let print_summary players_path games_path markdown =
 	let players = read_players players_path in
 	let games = read_games games_path in
 
 	print_endline (string_of_heading "Games");
-	List.iter print_endline (strings_of_games players games);
+	print_endline (string_of_section (strings_of_games players games));
 
 	print_endline (string_of_heading "Ladder");
-	List.iter print_endline (strings_of_ladder (play_games players games));
+	print_endline (string_of_section (strings_of_ladder (play_games players games)));
 	()
 
 (* Command line interface *)
