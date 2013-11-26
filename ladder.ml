@@ -24,19 +24,19 @@ type player = {
 	game_count: int;
 }
 
-let print_ladder players =
+let string_of_ladder players =
 	let sorted = 
 		List.sort (fun (_, {rating=rating1}) (_, {rating=rating2}) ->
 			compare rating2 rating1)
 		players
 	in
-	let rec print_player rank = function
-		| [] -> ()
-		| (_, p) :: tl ->
-			Printf.printf "%2d.  %-30s  %4d  (%d)\n" rank p.name (int_of_float p.rating) p.game_count;
-			print_player (rank + 1) tl
+	let lines =
+		List.mapi (fun rank (_, p) ->
+			Printf.sprintf "%2d.  %-30s  %4d  (%d)" (succ rank) p.name
+				(int_of_float p.rating) p.game_count;
+		) sorted
 	in
-	print_player 1 sorted
+	String.concat "\n" lines
 
 let play' player1 player2 result =
 	let update1, update2 = get_updates player1.rating player2.rating result in
@@ -49,17 +49,21 @@ let replace n p l =
 
 let (|>) x f = f x
 
-let print_result = function
+let string_of_result = function
 	| 1. -> "  1 - 0"
 	| 0.5 -> "0.5 - 0.5"
 	| _ -> "  0 - 1"
 
-let print_games players games =
-	List.iter (fun (nick1, nick2, result) ->
-		let player1 = List.assoc nick1 players in
-		let player2 = List.assoc nick2 players in
-		Printf.printf "%20s - %-20s    %s\n" player1.name player2.name (print_result result)
-	) games
+let string_of_games players games =
+	let lines =
+		List.map (fun (nick1, nick2, result) ->
+			let player1 = List.assoc nick1 players in
+			let player2 = List.assoc nick2 players in
+			Printf.sprintf "%20s - %-20s    %s" player1.name player2.name
+				(string_of_result result)
+		) games
+	in
+	String.concat "\n" lines
 
 let play players nick1 nick2 result =
 	let player1 = List.assoc nick1 players in
@@ -125,10 +129,10 @@ let print_summary players_path games_path =
 	let games = read_games games_path in
 
 	print_string "Games\n\n";
-	print_games players games;
+	print_endline (string_of_games players games);
 
 	print_string "\nLadder\n\n";
-	print_ladder (play_games players games);
+	print_endline (string_of_ladder (play_games players games));
 	()
 
 (* Command line interface *)
