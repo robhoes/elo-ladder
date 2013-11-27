@@ -152,11 +152,11 @@ let print_summary title players_path games_path gh_pages =
 	| None -> ()
 	end;
 
-	print_endline (string_of_heading ~gh_pages "Games");
-	print_endline (string_of_section ~gh_pages (strings_of_games players games));
-
 	print_endline (string_of_heading ~gh_pages "Ladder");
 	print_endline (string_of_section ~gh_pages (strings_of_ladder (play_games players games)));
+
+	print_endline (string_of_heading ~gh_pages "Games");
+	print_endline (string_of_section ~gh_pages (strings_of_games players games));
 	()
 
 (* Command line interface *)
