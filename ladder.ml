@@ -127,36 +127,36 @@ let read_games fname =
 let string_of_yaml_header () =
 	Printf.sprintf "%s\n%s\n%s" "---" "layout: default" "---"
 
-let string_of_title ?(markdown = false) title =
-	if markdown
+let string_of_title ?(gh_pages = false) title =
+	if gh_pages
 	then Printf.sprintf "# %s" title
 	else Printf.sprintf "\n%s\n%s" title (String.make (String.length title) '=')
 
-let string_of_heading ?(markdown = false) heading =
-	if markdown
+let string_of_heading ?(gh_pages = false) heading =
+	if gh_pages
 	then Printf.sprintf "### %s" heading
 	else Printf.sprintf "\n%s\n%s" heading (String.make (String.length heading) '-')
 
-let string_of_section ?(markdown = false) lines =
-	let lines = if markdown then ["```"] @ lines @ ["```"] else lines in
+let string_of_section ?(gh_pages = false) lines =
+	let lines = if gh_pages then ["```"] @ lines @ ["```"] else lines in
 	String.concat "\n" lines
 
-let print_summary title players_path games_path markdown =
+let print_summary title players_path games_path gh_pages =
 	let players = read_players players_path in
 	let games = read_games games_path in
 
-	if markdown then print_endline (string_of_yaml_header ());
+	if gh_pages then print_endline (string_of_yaml_header ());
 
 	begin match title with
-	| Some text -> print_endline (string_of_title ~markdown text)
+	| Some text -> print_endline (string_of_title ~gh_pages text)
 	| None -> ()
 	end;
 
-	print_endline (string_of_heading ~markdown "Games");
-	print_endline (string_of_section ~markdown (strings_of_games players games));
+	print_endline (string_of_heading ~gh_pages "Games");
+	print_endline (string_of_section ~gh_pages (strings_of_games players games));
 
-	print_endline (string_of_heading ~markdown "Ladder");
-	print_endline (string_of_section ~markdown (strings_of_ladder (play_games players games)));
+	print_endline (string_of_heading ~gh_pages "Ladder");
+	print_endline (string_of_section ~gh_pages (strings_of_ladder (play_games players games)));
 	()
 
 (* Command line interface *)
@@ -175,9 +175,9 @@ let games_path =
 	let doc = "Path to games file. See $(i,FILE-FORMATS) for details." in
 	Arg.(required & pos 1 (some file) None & info [] ~docv:"GAMES" ~doc)
 
-let markdown =
+let gh_pages =
 	let doc = "Output markdown for Github pages publication of ladder." in
-	Arg.(value & flag & info ["markdown"] ~doc)
+	Arg.(value & flag & info ["gh-pages"] ~doc)
 
 let cmd =
 	let doc = "Compute and print ELO ladder" in
@@ -205,7 +205,7 @@ let cmd =
 			    "https://github.com/robhoes/elo-ladder");
 		]
 	in
-	Term.(pure print_summary $ title $ players_path $ games_path $ markdown),
+	Term.(pure print_summary $ title $ players_path $ games_path $ gh_pages),
 	Term.info "ladder" ~version:"0.1a" ~doc ~man
 
 let _ =
