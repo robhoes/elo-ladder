@@ -84,28 +84,25 @@ let line_stream_of_channel channel =
 		try Some (input_line channel) with End_of_file -> None
 	)
 
-let read_players fname =
-	let f = open_in fname in
-	let parse s =
-		let a = String.index s ',' in
-		let b = String.rindex s ',' in
-		let n = String.length s in
-		let nick = String.sub s 0 a in
-		let name = String.sub s (a + 1) (b - a - 1) in
-		let rating = String.sub s (b + 1) (n - b - 1) |> int_of_string |> float_of_int in
-		nick, {name; rating; game_count = 0}
+let read_players path =
+	let parse_player_line line =
+		Scanf.sscanf line "%s@,%s@,%f"
+			(fun nick name rating -> nick, {name; rating; game_count = 0})
 	in
+	let in_channel = open_in path in
 	let players = ref [] in
 	begin
 		try
-			while true do
-				let s = input_line f in
-				players := parse s :: !players
-			done
-		with End_of_file -> ()
+			Stream.iter (fun line ->
+				players := parse_player_line line :: !players)
+				(line_stream_of_channel in_channel);
+			close_in in_channel;
+		with e ->
+			close_in_noerr in_channel;
+			raise e
 	end;
-	close_in f;
 	!players
+
 
 let read_games path =
 	let parse_game_line line =
