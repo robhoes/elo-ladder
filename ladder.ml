@@ -144,7 +144,7 @@ let string_of_section lines =
 	let lines = List.map (fun line -> "    " ^ line) lines in
 	String.concat "\n" lines
 
-let print_summary title players_path games_path gh_pages =
+let print_summary title players_path games_path rev_chron gh_pages =
 	let players = read_players players_path in
 	let games = read_games games_path in
 
@@ -159,7 +159,7 @@ let print_summary title players_path games_path gh_pages =
 	print_endline (string_of_section (strings_of_ladder (play_games players games)));
 
 	print_endline (string_of_heading ~gh_pages "Games");
-	print_endline (string_of_section (strings_of_games ~rev_chron:true players games));
+	print_endline (string_of_section (strings_of_games ~rev_chron players games));
 	()
 
 (* Command line interface *)
@@ -177,6 +177,10 @@ let players_path =
 let games_path =
 	let doc = "Path to games file. See $(i,FILE-FORMATS) for details." in
 	Arg.(required & pos 1 (some file) None & info [] ~docv:"GAMES" ~doc)
+
+let rev_chron =
+	let doc = "Print games in reverse-chronological order (off by default)." in
+	Arg.(value & flag & info ["R"; "reverse"] ~doc)
 
 let gh_pages =
 	let doc = "Output markdown for Github pages publication of ladder." in
@@ -208,7 +212,7 @@ let cmd =
 			    "https://github.com/robhoes/elo-ladder");
 		]
 	in
-	Term.(pure print_summary $ title $ players_path $ games_path $ gh_pages),
+	Term.(pure print_summary $ title $ players_path $ games_path $ rev_chron $ gh_pages),
 	Term.info "ladder" ~version:"0.1a" ~doc ~man
 
 let _ =
