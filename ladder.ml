@@ -137,8 +137,8 @@ let string_of_heading ?(gh_pages = false) heading =
 	then Printf.sprintf "### %s" heading
 	else Printf.sprintf "\n%s\n%s" heading (String.make (String.length heading) '-')
 
-let string_of_section ?(gh_pages = false) lines =
-	let lines = if gh_pages then ["```"] @ lines @ ["```"] else lines in
+let string_of_section lines =
+	let lines = List.map (fun line -> "    " ^ line) lines in
 	String.concat "\n" lines
 
 let print_summary title players_path games_path gh_pages =
@@ -153,10 +153,10 @@ let print_summary title players_path games_path gh_pages =
 	end;
 
 	print_endline (string_of_heading ~gh_pages "Ladder");
-	print_endline (string_of_section ~gh_pages (strings_of_ladder (play_games players games)));
+	print_endline (string_of_section (strings_of_ladder (play_games players games)));
 
 	print_endline (string_of_heading ~gh_pages "Games");
-	print_endline (string_of_section ~gh_pages (strings_of_games players games));
+	print_endline (string_of_section (strings_of_games players games));
 	()
 
 (* Command line interface *)
