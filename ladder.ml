@@ -54,7 +54,7 @@ let string_of_result = function
 	| 0.5 -> "0.5 - 0.5"
 	| _ -> "  0 - 1"
 
-let strings_of_games players games =
+let strings_of_games ~rev_chron players games =
 	let lines =
 		List.map (fun ((yyyy, mm, dd), nick1, nick2, result) ->
 			let player1 = List.assoc nick1 players in
@@ -64,7 +64,7 @@ let strings_of_games players games =
 				(string_of_result result)
 		) games
 	in
-	lines
+	if rev_chron then List.rev lines else lines
 
 let play players nick1 nick2 result =
 	let player1 = List.assoc nick1 players in
@@ -159,7 +159,7 @@ let print_summary title players_path games_path gh_pages =
 	print_endline (string_of_section (strings_of_ladder (play_games players games)));
 
 	print_endline (string_of_heading ~gh_pages "Games");
-	print_endline (string_of_section (strings_of_games players games));
+	print_endline (string_of_section (strings_of_games ~rev_chron:true players games));
 	()
 
 (* Command line interface *)
