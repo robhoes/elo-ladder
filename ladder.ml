@@ -56,10 +56,11 @@ let string_of_result = function
 
 let strings_of_games players games =
 	let lines =
-		List.map (fun ((y, m, d), nick1, nick2, result) ->
+		List.map (fun ((yyyy, mm, dd), nick1, nick2, result) ->
 			let player1 = List.assoc nick1 players in
 			let player2 = List.assoc nick2 players in
-			Printf.sprintf "%20s - %-20s    %s" player1.name player2.name
+			Printf.sprintf "%4d-%2d-%2d: %20s - %-20s    %s"
+				yyyy mm dd player1.name player2.name
 				(string_of_result result)
 		) games
 	in
