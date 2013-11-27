@@ -52,7 +52,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 
   #add, commit and push files
   git add index.md
-  git commit -m "Travis build $TRAVIS_BUILD_NUMBER pushed to gh-pages"
+  git commit --allow-empty -m "Travis build $TRAVIS_BUILD_NUMBER pushed to gh-pages"
   git push -fq origin gh-pages > /dev/null
 
   echo -e "Updated gh-pages with latest ladder\n"
