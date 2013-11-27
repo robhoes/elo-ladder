@@ -201,7 +201,7 @@ let cmd =
 			`I ("Syntax:", "<Date>,<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
 			`P "Where the date is in ISO 6801 format (yyyy-mm-dd); $(i,ID)s
 			    match those listed in the $(i,PLAYERS) file; and $(i,RES) is
-			    either $(i,1.), $(i,.5) or $(i,0.) in the case of a win, draw
+			    either $(i,1), $(i,.5) or $(i,0) in the case of a win, draw
 			    or loss for white respectively.";
 			`I ("Example:", "2013-11-21,magnus,anand,.5");
 		`S "BUGS";
