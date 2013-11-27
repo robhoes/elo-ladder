@@ -124,6 +124,9 @@ let read_games fname =
 	close_in f;
 	List.rev !games
 
+let string_of_yaml_header () =
+	Printf.sprintf "%s\n%s\n%s" "---" "layout: default" "---"
+
 let string_of_title ?(markdown = false) title =
 	if markdown
 	then Printf.sprintf "# %s" title
@@ -141,6 +144,8 @@ let string_of_section ?(markdown = false) lines =
 let print_summary title players_path games_path markdown =
 	let players = read_players players_path in
 	let games = read_games games_path in
+
+	if markdown then print_endline (string_of_yaml_header ());
 
 	begin match title with
 	| Some text -> print_endline (string_of_title ~markdown text)
