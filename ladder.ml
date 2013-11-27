@@ -124,6 +124,11 @@ let read_games fname =
 	close_in f;
 	List.rev !games
 
+let string_of_title ?(markdown = false) title =
+	if markdown
+	then Printf.sprintf "# %s" title
+	else Printf.sprintf "\n%s\n%s" title (String.make (String.length title) '=')
+
 let string_of_heading ?(markdown = false) heading =
 	if markdown
 	then Printf.sprintf "### %s" heading
@@ -133,9 +138,14 @@ let string_of_section ?(markdown = false) lines =
 	let lines = if markdown then ["```"] @ lines @ ["```"] else lines in
 	String.concat "\n" lines
 
-let print_summary players_path games_path markdown =
+let print_summary title players_path games_path markdown =
 	let players = read_players players_path in
 	let games = read_games games_path in
+
+	begin match title with
+	| Some text -> print_endline (string_of_title ~markdown text)
+	| None -> ()
+	end;
 
 	print_endline (string_of_heading ~markdown "Games");
 	print_endline (string_of_section ~markdown (strings_of_games players games));
@@ -148,6 +158,10 @@ let print_summary players_path games_path markdown =
 
 open Cmdliner
 
+let title =
+	let doc = "Optionally print a title before printing the ladder." in
+	Arg.(value & opt (some string) None & info ["t"; "title"] ~docv:"TITLE" ~doc)
+	
 let players_path =
 	let doc = "Path to players file. See $(i,FILE-FORMATS) for details." in
 	Arg.(required & pos 0 (some file) None & info [] ~docv:"PLAYERS" ~doc)
@@ -186,7 +200,7 @@ let cmd =
 			    "https://github.com/robhoes/elo-ladder");
 		]
 	in
-	Term.(pure print_summary $ players_path $ games_path $ markdown),
+	Term.(pure print_summary $ title $ players_path $ games_path $ markdown),
 	Term.info "ladder" ~version:"0.1a" ~doc ~man
 
 let _ =
