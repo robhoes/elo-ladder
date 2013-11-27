@@ -56,7 +56,7 @@ let string_of_result = function
 
 let strings_of_games players games =
 	let lines =
-		List.map (fun (nick1, nick2, result) ->
+		List.map (fun ((y, m, d), nick1, nick2, result) ->
 			let player1 = List.assoc nick1 players in
 			let player2 = List.assoc nick2 players in
 			Printf.sprintf "%20s - %-20s    %s" player1.name player2.name
@@ -72,11 +72,16 @@ let play players nick1 nick2 result =
 	players |> replace nick1 player1 |> replace nick2 player2
 
 let play_games players games =
-	List.fold_left (fun players (nick1, nick2, result) ->
+	List.fold_left (fun players (date, nick1, nick2, result) ->
 		play players nick1 nick2 result
 	) players games
 
 (* filing *)
+
+let line_stream_of_channel channel =
+	Stream.from (fun _ ->
+		try Some (input_line channel) with End_of_file -> None
+	)
 
 let read_players fname =
 	let f = open_in fname in
@@ -101,27 +106,24 @@ let read_players fname =
 	close_in f;
 	!players
 
-let read_games fname =
-	let f = open_in fname in
-	let parse s =
-		let a = String.index s ',' in
-		let b = String.rindex s ',' in
-		let n = String.length s in
-		let nick1 = String.sub s 0 a in
-		let nick2 = String.sub s (a + 1) (b - a - 1) in
-		let result = String.sub s (b + 1) (n - b - 1) |> float_of_string in
-		nick1, nick2, result
+let read_games path =
+	let parse_game_line line =
+		Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%f"
+			(fun yyyy mm dd nick_w nick_b res -> (yyyy, mm, dd), nick_w, nick_b, res
+		)
 	in
+	let in_channel = open_in path in
 	let games = ref [] in
 	begin
 		try
-			while true do
-				let s = input_line f in
-				games := parse s :: !games
-			done
-		with End_of_file -> ()
+			Stream.iter (fun line ->
+				games := parse_game_line line :: !games)
+				(line_stream_of_channel in_channel);
+			close_in in_channel
+		with e ->
+			close_in_noerr in_channel;
+			raise e
 	end;
-	close_in f;
 	List.rev !games
 
 let string_of_yaml_header () =
