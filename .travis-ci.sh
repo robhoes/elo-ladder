@@ -1,5 +1,5 @@
 # OPAM packages needed to build tests.
-OPAM_PACKAGES="cmdliner"
+OPAM_PACKAGES="cmdliner,re"
 
 
 case "$OCAML_VERSION,$OPAM_VERSION" in
