@@ -201,11 +201,12 @@ let cmd =
 			`I ("Example:", "magnus,Magnus Carlsen,2870");
 			`P ""; `Noblank;
 			`P "The $(i,GAMES) file should be in CSV format:";
-			`I ("Syntax:", "<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
-			`P "Where the $(i,ID)s match those listed in the $(i,PLAYERS)
-			    file and $(i,RES) is either $(i,1.), $(i,.5) or $(i,0.) in the
-			    case of a win, draw or loss for white respectively.";
-			`I ("Example:", "magnus,anand,.5");
+			`I ("Syntax:", "<Date>,<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
+			`P "Where the date is in ISO 6801 format (yyyy-mm-dd); $(i,ID)s
+			    match those listed in the $(i,PLAYERS) file; and $(i,RES) is
+			    either $(i,1.), $(i,.5) or $(i,0.) in the case of a win, draw
+			    or loss for white respectively.";
+			`I ("Example:", "2013-11-21,magnus,anand,.5");
 		`S "BUGS";
 			`I ("Please report bugs by opening an issue on the Elo-ladder
 			     project page on Github:",
