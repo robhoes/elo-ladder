@@ -54,16 +54,17 @@ let string_of_result = function
 	| 0.5 -> "0.5 - 0.5"
 	| _ -> "  0 - 1"
 
-let strings_of_games players games =
+let strings_of_games ~rev_chron players games =
 	let lines =
-		List.map (fun (nick1, nick2, result) ->
+		List.map (fun ((yyyy, mm, dd), nick1, nick2, result) ->
 			let player1 = List.assoc nick1 players in
 			let player2 = List.assoc nick2 players in
-			Printf.sprintf "%20s - %-20s    %s" player1.name player2.name
+			Printf.sprintf "%4d-%2d-%2d: %20s - %-20s    %s"
+				yyyy mm dd player1.name player2.name
 				(string_of_result result)
 		) games
 	in
-	lines
+	if rev_chron then List.rev lines else lines
 
 let play players nick1 nick2 result =
 	let player1 = List.assoc nick1 players in
@@ -72,56 +73,55 @@ let play players nick1 nick2 result =
 	players |> replace nick1 player1 |> replace nick2 player2
 
 let play_games players games =
-	List.fold_left (fun players (nick1, nick2, result) ->
+	List.fold_left (fun players (date, nick1, nick2, result) ->
 		play players nick1 nick2 result
 	) players games
 
 (* filing *)
 
-let read_players fname =
-	let f = open_in fname in
-	let parse s =
-		let a = String.index s ',' in
-		let b = String.rindex s ',' in
-		let n = String.length s in
-		let nick = String.sub s 0 a in
-		let name = String.sub s (a + 1) (b - a - 1) in
-		let rating = String.sub s (b + 1) (n - b - 1) |> int_of_string |> float_of_int in
-		nick, {name; rating; game_count = 0}
+let line_stream_of_channel channel =
+	Stream.from (fun _ ->
+		try Some (input_line channel) with End_of_file -> None
+	)
+
+let read_players path =
+	let parse_player_line line =
+		Scanf.sscanf line "%s@,%s@,%f"
+			(fun nick name rating -> nick, {name; rating; game_count = 0})
 	in
+	let in_channel = open_in path in
 	let players = ref [] in
 	begin
 		try
-			while true do
-				let s = input_line f in
-				players := parse s :: !players
-			done
-		with End_of_file -> ()
+			Stream.iter (fun line ->
+				players := parse_player_line line :: !players)
+				(line_stream_of_channel in_channel);
+			close_in in_channel;
+		with e ->
+			close_in_noerr in_channel;
+			raise e
 	end;
-	close_in f;
 	!players
 
-let read_games fname =
-	let f = open_in fname in
-	let parse s =
-		let a = String.index s ',' in
-		let b = String.rindex s ',' in
-		let n = String.length s in
-		let nick1 = String.sub s 0 a in
-		let nick2 = String.sub s (a + 1) (b - a - 1) in
-		let result = String.sub s (b + 1) (n - b - 1) |> float_of_string in
-		nick1, nick2, result
+
+let read_games path =
+	let parse_game_line line =
+		Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%f"
+			(fun yyyy mm dd nick_w nick_b res -> (yyyy, mm, dd), nick_w, nick_b, res
+		)
 	in
+	let in_channel = open_in path in
 	let games = ref [] in
 	begin
 		try
-			while true do
-				let s = input_line f in
-				games := parse s :: !games
-			done
-		with End_of_file -> ()
+			Stream.iter (fun line ->
+				games := parse_game_line line :: !games)
+				(line_stream_of_channel in_channel);
+			close_in in_channel
+		with e ->
+			close_in_noerr in_channel;
+			raise e
 	end;
-	close_in f;
 	List.rev !games
 
 let string_of_yaml_header () =
@@ -141,7 +141,7 @@ let string_of_section lines =
 	let lines = List.map (fun line -> "    " ^ line) lines in
 	String.concat "\n" lines
 
-let print_summary title players_path games_path gh_pages =
+let print_summary title players_path games_path rev_chron gh_pages =
 	let players = read_players players_path in
 	let games = read_games games_path in
 
@@ -156,7 +156,7 @@ let print_summary title players_path games_path gh_pages =
 	print_endline (string_of_section (strings_of_ladder (play_games players games)));
 
 	print_endline (string_of_heading ~gh_pages "Games");
-	print_endline (string_of_section (strings_of_games players games));
+	print_endline (string_of_section (strings_of_games ~rev_chron players games));
 	()
 
 (* Command line interface *)
@@ -174,6 +174,10 @@ let players_path =
 let games_path =
 	let doc = "Path to games file. See $(i,FILE-FORMATS) for details." in
 	Arg.(required & pos 1 (some file) None & info [] ~docv:"GAMES" ~doc)
+
+let rev_chron =
+	let doc = "Print games in reverse-chronological order (off by default)." in
+	Arg.(value & flag & info ["R"; "reverse"] ~doc)
 
 let gh_pages =
 	let doc = "Output markdown for Github pages publication of ladder." in
@@ -194,18 +198,19 @@ let cmd =
 			`I ("Example:", "magnus,Magnus Carlsen,2870");
 			`P ""; `Noblank;
 			`P "The $(i,GAMES) file should be in CSV format:";
-			`I ("Syntax:", "<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
-			`P "Where the $(i,ID)s match those listed in the $(i,PLAYERS)
-			    file and $(i,RES) is either $(i,1.), $(i,.5) or $(i,0.) in the
-			    case of a win, draw or loss for white respectively.";
-			`I ("Example:", "magnus,anand,.5");
+			`I ("Syntax:", "<Date>,<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
+			`P "Where the date is in ISO 6801 format (yyyy-mm-dd); $(i,ID)s
+			    match those listed in the $(i,PLAYERS) file; and $(i,RES) is
+			    either $(i,1), $(i,.5) or $(i,0) in the case of a win, draw
+			    or loss for white respectively.";
+			`I ("Example:", "2013-11-21,magnus,anand,.5");
 		`S "BUGS";
 			`I ("Please report bugs by opening an issue on the Elo-ladder
 			     project page on Github:",
 			    "https://github.com/robhoes/elo-ladder");
 		]
 	in
-	Term.(pure print_summary $ title $ players_path $ games_path $ gh_pages),
+	Term.(pure print_summary $ title $ players_path $ games_path $ rev_chron $ gh_pages),
 	Term.info "ladder" ~version:"0.1a" ~doc ~man
 
 let _ =
