@@ -1,29 +1,3 @@
-(* helpers *)
-
-let replace n p l =
-	let l = List.remove_assoc n l in
-	(n, p) :: l
-
-let (|>) x f = f x
-
-type date = {
-	day: int;
-	month: int;
-	year: int;
-}
-
-let date_of_string d =
-	let r = Re_perl.re "(\\d*)/(\\d*)/(\\d*)" |> Re.compile in
-	let m = Re.exec r d in
-	{
-		day = Re.get m 1 |> int_of_string;
-		month = Re.get m 2 |> int_of_string;
-		year = Re.get m 3 |> int_of_string;
-	}
-
-let string_of_date {day; month; year} =
-	Printf.sprintf "%02d/%02d/%04d" day month year
-
 (* Elo rating calculations *)
 
 let k = 32.
@@ -69,6 +43,12 @@ let play' player1 player2 result =
 	{player1 with rating = update1; game_count = player1.game_count + 1},
 	{player2 with rating = update2; game_count = player2.game_count + 1}
 
+let replace n p l =
+	let l = List.remove_assoc n l in
+	(n, p) :: l
+
+let (|>) x f = f x
+
 let string_of_result = function
 	| 1. -> "  1 - 0"
 	| 0.5 -> "0.5 - 0.5"
@@ -76,12 +56,12 @@ let string_of_result = function
 
 let strings_of_games players games =
 	let lines =
-		List.map (fun (date, nick1, nick2, result) ->
+		List.map (fun (nick1, nick2, result) ->
 			let player1 = List.assoc nick1 players in
 			let player2 = List.assoc nick2 players in
-			Printf.sprintf "%s   %20s - %-20s    %s" (string_of_date date) player1.name player2.name
+			Printf.sprintf "%20s - %-20s    %s" player1.name player2.name
 				(string_of_result result)
-		) (List.rev games)
+		) games
 	in
 	lines
 
@@ -92,7 +72,7 @@ let play players nick1 nick2 result =
 	players |> replace nick1 player1 |> replace nick2 player2
 
 let play_games players games =
-	List.fold_left (fun players (date, nick1, nick2, result) ->
+	List.fold_left (fun players (nick1, nick2, result) ->
 		play players nick1 nick2 result
 	) players games
 
@@ -101,13 +81,13 @@ let play_games players games =
 let read_players fname =
 	let f = open_in fname in
 	let parse s =
-		let r = Re_str.regexp_string "," in
-		let split = Re_str.split_delim r s in
-		match split with
-		| nick :: name :: rating :: _ ->
-			let rating = rating |> int_of_string |> float_of_int in
-			nick, {name; rating; game_count = 0}
-		| _ -> failwith "parser error"
+		let a = String.index s ',' in
+		let b = String.rindex s ',' in
+		let n = String.length s in
+		let nick = String.sub s 0 a in
+		let name = String.sub s (a + 1) (b - a - 1) in
+		let rating = String.sub s (b + 1) (n - b - 1) |> int_of_string |> float_of_int in
+		nick, {name; rating; game_count = 0}
 	in
 	let players = ref [] in
 	begin
@@ -124,12 +104,13 @@ let read_players fname =
 let read_games fname =
 	let f = open_in fname in
 	let parse s =
-		let r = Re_str.regexp_string "," in
-		let split = Re_str.split_delim r s in
-		match split with
-		| date :: nick1 :: nick2 :: result :: _ ->
-			date_of_string date, nick1, nick2, float_of_string result
-		| _ -> failwith "parser error"
+		let a = String.index s ',' in
+		let b = String.rindex s ',' in
+		let n = String.length s in
+		let nick1 = String.sub s 0 a in
+		let nick2 = String.sub s (a + 1) (b - a - 1) in
+		let result = String.sub s (b + 1) (n - b - 1) |> float_of_string in
+		nick1, nick2, result
 	in
 	let games = ref [] in
 	begin
