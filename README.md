@@ -1,12 +1,10 @@
-Elo-ladder [![Build Status](https://travis-ci.org/simonjbeaumont/ocaml-pci-db.png)](https://travis-ci.org/robhoes/elo-ladder)
-==========
+# Elo-ladder [![Build Status](https://travis-ci.org/simonjbeaumont/ocaml-pci-db.png)](https://travis-ci.org/robhoes/elo-ladder)
 
 _An Elo-rating based ladder competition manager_
 
 The algorithm is as described on http://en.wikipedia.org/wiki/ELO_rating_system.
 
-Commandline usage
-=================
+## Commandline usage
 
 ```
 NAME
