@@ -21,7 +21,8 @@ let get_updates rating1 rating2 result =
 type player = {
 	name: string;
 	rating: float;
-	game_count: int;
+	win_count: float;
+	loss_count: float;
 }
 
 let strings_of_ladder players =
@@ -32,16 +33,16 @@ let strings_of_ladder players =
 	in
 	let lines =
 		List.mapi (fun rank (_, p) ->
-			Printf.sprintf "%2d.  %-30s  %4d  (%d)" (succ rank) p.name
-				(int_of_float p.rating) p.game_count;
+			Printf.sprintf "%2d.  %-30s  %4d  (%g-%g)" (succ rank) p.name
+				(int_of_float p.rating) p.win_count p.loss_count;
 		) sorted
 	in
 	lines
 
 let play' player1 player2 result =
 	let update1, update2 = get_updates player1.rating player2.rating result in
-	{player1 with rating = update1; game_count = player1.game_count + 1},
-	{player2 with rating = update2; game_count = player2.game_count + 1}
+	{player1 with rating = update1; win_count = player1.win_count +. result; loss_count = player1.loss_count +. 1. -. result},
+	{player2 with rating = update2; win_count = player2.win_count +. 1. -. result; loss_count = player2.loss_count +. result}
 
 let replace n p l =
 	let l = List.remove_assoc n l in
@@ -87,7 +88,7 @@ let line_stream_of_channel channel =
 let read_players path =
 	let parse_player_line line =
 		Scanf.sscanf line "%s@,%s@,%f"
-			(fun nick name rating -> nick, {name; rating; game_count = 0})
+			(fun nick name rating -> nick, {name; rating; win_count = 0.; loss_count = 0.})
 	in
 	let in_channel = open_in path in
 	let players = ref [] in
