@@ -32,13 +32,11 @@ let strings_of_ladder players =
 			compare rating2 rating1)
 		players
 	in
-	let lines =
-		List.mapi (fun rank (_, p) ->
-			Printf.sprintf "%2d.  %-30s  %4d  (%g / %d)" (succ rank) p.name
-				(int_of_float p.rating) p.points_won p.game_count;
-		) sorted
-	in
-	lines
+	List.mapi (fun rank (_, p) ->
+		Printf.sprintf "%2d.  %-30s  %-1s  %4d  (%g / %d)" (succ rank) p.name
+		(if not p.active then "☠" else "")
+			(int_of_float p.rating) p.points_won p.game_count;
+	) sorted
 
 let play' player1 player2 result =
 	let update1, update2 = get_updates player1.rating player2.rating result in
