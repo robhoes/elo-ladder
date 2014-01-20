@@ -23,6 +23,7 @@ type player = {
 	rating: float;
 	game_count: int;
 	points_won: float;
+	active: bool;
 }
 
 let strings_of_ladder players =
@@ -31,13 +32,11 @@ let strings_of_ladder players =
 			compare rating2 rating1)
 		players
 	in
-	let lines =
-		List.mapi (fun rank (_, p) ->
-			Printf.sprintf "%2d.  %-30s  %4d  (%g / %d)" (succ rank) p.name
-				(int_of_float p.rating) p.points_won p.game_count;
-		) sorted
-	in
-	lines
+	List.mapi (fun rank (_, p) ->
+		Printf.sprintf "%2d.  %-30s  %-1s  %4d  (%g / %d)" (succ rank) p.name
+		(if not p.active then "☠" else "")
+			(int_of_float p.rating) p.points_won p.game_count;
+	) sorted
 
 let play' player1 player2 result =
 	let update1, update2 = get_updates player1.rating player2.rating result in
@@ -87,8 +86,8 @@ let line_stream_of_channel channel =
 
 let read_players path =
 	let parse_player_line line =
-		Scanf.sscanf line "%s@,%s@,%f"
-			(fun nick name rating -> nick, {name; rating; game_count = 0; points_won = 0.})
+		Scanf.sscanf line "%s@,%s@,%f,%b"
+			(fun nick name rating active -> nick, {name; rating; game_count = 0; points_won = 0.; active})
 	in
 	let in_channel = open_in path in
 	let players = ref [] in
