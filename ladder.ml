@@ -159,6 +159,8 @@ let print_summary title players_path games_path rev_chron gh_pages =
 	print_endline (string_of_section (strings_of_games ~rev_chron players games));
 	()
 
+let print_history players_path games_path = ()
+
 (* Command line interface *)
 
 open Cmdliner
@@ -197,20 +199,19 @@ let help_secs = [
 		     project page on Github:",
 		    "https://github.com/robhoes/elo-ladder"); ]
 
+let players_path =
+	let doc = "Path to players file. See $(i,FILE-FORMATS) for details." in
+	Arg.(required & pos 0 (some file) None & info [] ~docv:"PLAYERS" ~doc)
+
+let games_path =
+	let doc = "Path to games file. See $(i,FILE-FORMATS) for details." in
+	Arg.(required & pos 1 (some file) None & info [] ~docv:"GAMES" ~doc)
+
+
 let print_cmd =
 	let title =
 		let doc = "Optionally print a title before printing the ladder." in
 		Arg.(value & opt (some string) None & info ["t"; "title"] ~docv:"TITLE" ~doc)
-	in
-
-	let players_path =
-		let doc = "Path to players file. See $(i,FILE-FORMATS) for details." in
-		Arg.(required & pos 0 (some file) None & info [] ~docv:"PLAYERS" ~doc)
-	in
-
-	let games_path =
-		let doc = "Path to games file. See $(i,FILE-FORMATS) for details." in
-		Arg.(required & pos 1 (some file) None & info [] ~docv:"GAMES" ~doc)
 	in
 
 	let rev_chron =
@@ -222,6 +223,7 @@ let print_cmd =
 		let doc = "Output markdown for Github pages publication of ladder." in
 		Arg.(value & flag & info ["gh-pages"] ~doc)
 	in
+
 	let doc = "Compute and print ELO ladder" in
 	let man = [
 		`S "DESCRIPTION";
@@ -232,13 +234,25 @@ let print_cmd =
 	Term.(pure print_summary $ title $ players_path $ games_path $ rev_chron $ gh_pages),
 	Term.info "print" ~doc ~man
 
+let history_cmd =
+	let doc = "Compute and print historic ratings of players for plotting" in
+	let man = [
+		`S "DESCRIPTION";
+			`P "$(tname) computes the historic Elo ratings for the players
+			    specified in $(i,PLAYERS) after each of the games specified in
+			    $(i,GAMES) and outputs these as datapoints in CSV format"
+		] @ help_secs
+	in
+	Term.(pure print_history $ players_path $ games_path),
+	Term.info "history" ~doc ~man
+
 let default_cmd =
 	let doc = "An Elo ladder system" in
 	let man = help_secs in
 	Term.(ret (pure (`Help (`Pager, None)))),
 	Term.info "ladder" ~version:"0.1a" ~doc ~man
 
-let cmds = [ print_cmd ]
+let cmds = [ print_cmd; history_cmd ]
 
 let _ =
 	match Term.eval_choice default_cmd cmds with
