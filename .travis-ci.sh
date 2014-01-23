@@ -30,7 +30,7 @@ eval `opam config -env`
 
 # Post-boilerplate
 make
-./ladder --gh-pages --title "XenServer Chess Ladder" players games --reverse > index.md
+./ladder print --gh-pages --title "XenServer Chess Ladder" players games --reverse > index.md
 
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   echo -e "Starting to update gh-pages\n"

@@ -163,55 +163,83 @@ let print_summary title players_path games_path rev_chron gh_pages =
 
 open Cmdliner
 
-let title =
-	let doc = "Optionally print a title before printing the ladder." in
-	Arg.(value & opt (some string) None & info ["t"; "title"] ~docv:"TITLE" ~doc)
-	
-let players_path =
-	let doc = "Path to players file. See $(i,FILE-FORMATS) for details." in
-	Arg.(required & pos 0 (some file) None & info [] ~docv:"PLAYERS" ~doc)
+let help common_opts man_format cmds topic = match topic with
+  | None -> `Help (`Pager, None) (* help about the program. *)
+  | Some topic ->
+    let topics = "topics" :: "patterns" :: "environment" :: cmds in
+    let conv, _ = Arg.enum (List.rev_map (fun s -> (s, s)) topics) in
+    match conv topic with
+    | `Error e -> `Error (false, e)
+    | `Ok t when t = "topics" -> List.iter print_endline topics; `Ok ()
+    | `Ok t when List.mem t cmds -> `Help (man_format, Some t)
+    | `Ok t ->
+      let page = (topic, 7, "", "", ""), [`S topic; `P "Say something";] in
+      `Ok (Manpage.print man_format Format.std_formatter page)
 
-let games_path =
-	let doc = "Path to games file. See $(i,FILE-FORMATS) for details." in
-	Arg.(required & pos 1 (some file) None & info [] ~docv:"GAMES" ~doc)
+let help_secs = [
+	`P "Use `$(mname) $(i,COMMAND) --help' for help on a specific command.";`Noblank;
+	`S "FILE-FORMATS";
+		`P "The $(i,PLAYERS) file should be in CSV format:";
+		`I ("Syntax:", "<$(i,ID)>,<Full name>,<$(i,Elo-rating)>");
+		`P "Where $(i,ID) can be any unique string and $(i,Elo-rating) is
+		    the starting rating for the player as an integer.";
+		`I ("Example:", "magnus,Magnus Carlsen,2870");
+		`P ""; `Noblank;
+		`P "The $(i,GAMES) file should be in CSV format:";
+		`I ("Syntax:", "<Date>,<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
+		`P "Where the date is in ISO 6801 format (yyyy-mm-dd); $(i,ID)s
+		    match those listed in the $(i,PLAYERS) file; and $(i,RES) is
+		    either $(i,1), $(i,.5) or $(i,0) in the case of a win, draw
+		    or loss for white respectively.";
+		`I ("Example:", "2013-11-21,magnus,anand,.5");
+	`S "BUGS";
+		`I ("Please report bugs by opening an issue on the Elo-ladder
+		     project page on Github:",
+		    "https://github.com/robhoes/elo-ladder"); ]
 
-let rev_chron =
-	let doc = "Print games in reverse-chronological order (off by default)." in
-	Arg.(value & flag & info ["R"; "reverse"] ~doc)
+let print_cmd =
+	let title =
+		let doc = "Optionally print a title before printing the ladder." in
+		Arg.(value & opt (some string) None & info ["t"; "title"] ~docv:"TITLE" ~doc)
+	in
 
-let gh_pages =
-	let doc = "Output markdown for Github pages publication of ladder." in
-	Arg.(value & flag & info ["gh-pages"] ~doc)
+	let players_path =
+		let doc = "Path to players file. See $(i,FILE-FORMATS) for details." in
+		Arg.(required & pos 0 (some file) None & info [] ~docv:"PLAYERS" ~doc)
+	in
 
-let cmd =
+	let games_path =
+		let doc = "Path to games file. See $(i,FILE-FORMATS) for details." in
+		Arg.(required & pos 1 (some file) None & info [] ~docv:"GAMES" ~doc)
+	in
+
+	let rev_chron =
+		let doc = "Print games in reverse-chronological order (off by default)." in
+		Arg.(value & flag & info ["R"; "reverse"] ~doc)
+	in
+
+	let gh_pages =
+		let doc = "Output markdown for Github pages publication of ladder." in
+		Arg.(value & flag & info ["gh-pages"] ~doc)
+	in
 	let doc = "Compute and print ELO ladder" in
 	let man = [
 		`S "DESCRIPTION";
 			`P "$(tname) computes the resulting ELO ratings for the players
 			    specified in $(i,PLAYERS) after playing the games specified in
-			    $(i,GAMES).";
-		`S "FILE-FORMATS";
-			`P "The $(i,PLAYERS) file should be in CSV format:";
-			`I ("Syntax:", "<$(i,ID)>,<Full name>,<$(i,Elo-rating)>");
-			`P "Where $(i,ID) can be any unique string and $(i,Elo-rating) is
-			    the starting rating for the player as an integer.";
-			`I ("Example:", "magnus,Magnus Carlsen,2870");
-			`P ""; `Noblank;
-			`P "The $(i,GAMES) file should be in CSV format:";
-			`I ("Syntax:", "<Date>,<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
-			`P "Where the date is in ISO 6801 format (yyyy-mm-dd); $(i,ID)s
-			    match those listed in the $(i,PLAYERS) file; and $(i,RES) is
-			    either $(i,1), $(i,.5) or $(i,0) in the case of a win, draw
-			    or loss for white respectively.";
-			`I ("Example:", "2013-11-21,magnus,anand,.5");
-		`S "BUGS";
-			`I ("Please report bugs by opening an issue on the Elo-ladder
-			     project page on Github:",
-			    "https://github.com/robhoes/elo-ladder");
-		]
+			    $(i,GAMES)."; ] @ help_secs
 	in
 	Term.(pure print_summary $ title $ players_path $ games_path $ rev_chron $ gh_pages),
+	Term.info "print" ~doc ~man
+
+let default_cmd =
+	let doc = "An Elo ladder system" in
+	let man = help_secs in
+	Term.(ret (pure (`Help (`Pager, None)))),
 	Term.info "ladder" ~version:"0.1a" ~doc ~man
 
+let cmds = [ print_cmd ]
+
 let _ =
-	match Term.eval cmd with `Error _ -> exit 1 | _ -> exit 0
+	match Term.eval_choice default_cmd cmds with
+	| `Error _ -> exit 1 | _ -> exit 0
