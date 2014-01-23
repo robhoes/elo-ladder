@@ -21,6 +21,7 @@ let get_updates rating1 rating2 result =
 type player = {
 	name: string;
 	rating: float;
+	past_ratings: float list; (* reverse-chronological *)
 	game_count: int;
 	points_won: float;
 	active: bool;
@@ -38,10 +39,12 @@ let strings_of_ladder players =
 			(int_of_float p.rating) p.points_won p.game_count;
 	) sorted
 
-let play' player1 player2 result =
-	let update1, update2 = get_updates player1.rating player2.rating result in
-	{player1 with rating = update1; game_count = player1.game_count + 1; points_won = player1.points_won +. result},
-	{player2 with rating = update2; game_count = player2.game_count + 1; points_won = player2.points_won +. 1. -. result}
+let play' p1 p2 result =
+	let update1, update2 = get_updates p1.rating p2.rating result in
+	{p1 with rating = update1; past_ratings = p1.rating :: p1.past_ratings;
+		game_count = p1.game_count + 1; points_won = p1.points_won +. result},
+	{p2 with rating = update2; past_ratings = p2.rating :: p2.past_ratings;
+		game_count = p2.game_count + 1; points_won = p2.points_won +. 1. -. result}
 
 let replace n p l =
 	let l = List.remove_assoc n l in
@@ -87,7 +90,7 @@ let line_stream_of_channel channel =
 let read_players path =
 	let parse_player_line line =
 		Scanf.sscanf line "%s@,%s@,%f,%b"
-			(fun nick name rating active -> nick, {name; rating; game_count = 0; points_won = 0.; active})
+			(fun nick name rating active -> nick, {name; rating; past_ratings = []; game_count = 0; points_won = 0.; active})
 	in
 	let in_channel = open_in path in
 	let players = ref [] in
