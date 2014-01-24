@@ -18,10 +18,17 @@ let get_updates rating1 rating2 result =
 
 (* ladder *)
 
+module Date = struct
+	type t = { y : int; m : int; d : int }
+	let compare t t' = compare (t.y, t.m, t.d) (t'.y, t'.m, t'.d)
+	let string_of t = Printf.sprintf "%04d-%02d-%02d" t.y t.m t.d
+end
+module DateMap = Map.Make(Date)
+
 type player = {
 	name: string;
 	rating: float;
-	past_ratings: float list; (* reverse-chronological *)
+	history: float DateMap.t;
 	game_count: int;
 	points_won: float;
 	active: bool;
@@ -39,11 +46,11 @@ let strings_of_ladder players =
 			(int_of_float p.rating) p.points_won p.game_count;
 	) sorted
 
-let play' p1 p2 result =
+let play' p1 p2 result date =
 	let update1, update2 = get_updates p1.rating p2.rating result in
-	{p1 with rating = update1; past_ratings = p1.rating :: p1.past_ratings;
+	{p1 with rating = update1; history = DateMap.add date update1 p1.history;
 		game_count = p1.game_count + 1; points_won = p1.points_won +. result},
-	{p2 with rating = update2; past_ratings = p2.rating :: p2.past_ratings;
+	{p2 with rating = update2; history = DateMap.add date update2 p2.history;
 		game_count = p2.game_count + 1; points_won = p2.points_won +. 1. -. result}
 
 let replace n p l =
@@ -59,25 +66,25 @@ let string_of_result = function
 
 let strings_of_games ~rev_chron players games =
 	let lines =
-		List.map (fun ((yyyy, mm, dd), nick1, nick2, result) ->
+		List.map (fun (date, nick1, nick2, result) ->
 			let player1 = List.assoc nick1 players in
 			let player2 = List.assoc nick2 players in
-			Printf.sprintf "%04d-%02d-%02d: %20s - %-20s    %s"
-				yyyy mm dd player1.name player2.name
+			Printf.sprintf "%s: %20s - %-20s    %s"
+				(Date.string_of date) player1.name player2.name
 				(string_of_result result)
 		) games
 	in
 	if rev_chron then List.rev lines else lines
 
-let play players nick1 nick2 result =
+let play players nick1 nick2 result date =
 	let player1 = List.assoc nick1 players in
 	let player2 = List.assoc nick2 players in
-	let player1, player2 = play' player1 player2 result in
+	let player1, player2 = play' player1 player2 result date in
 	players |> replace nick1 player1 |> replace nick2 player2
 
 let play_games players games =
 	List.fold_left (fun players (date, nick1, nick2, result) ->
-		play players nick1 nick2 result
+		play players nick1 nick2 result date
 	) players games
 
 (* filing *)
@@ -90,7 +97,8 @@ let line_stream_of_channel channel =
 let read_players path =
 	let parse_player_line line =
 		Scanf.sscanf line "%s@,%s@,%f,%b"
-			(fun nick name rating active -> nick, {name; rating; past_ratings = []; game_count = 0; points_won = 0.; active})
+			(fun nick name rating active ->
+				nick, {name; rating; history = DateMap.empty; game_count = 0; points_won = 0.; active})
 	in
 	let in_channel = open_in path in
 	let players = ref [] in
@@ -110,7 +118,7 @@ let read_players path =
 let read_games path =
 	let parse_game_line line =
 		Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%f"
-			(fun yyyy mm dd nick_w nick_b res -> (yyyy, mm, dd), nick_w, nick_b, res
+			(fun yyyy mm dd nick_w nick_b res -> Date.({y=yyyy; m=mm; d=dd}), nick_w, nick_b, res
 		)
 	in
 	let in_channel = open_in path in
