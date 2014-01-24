@@ -76,6 +76,14 @@ let strings_of_games ~rev_chron players games =
 	in
 	if rev_chron then List.rev lines else lines
 
+let strings_of_history players =
+	List.fold_left (fun acc (_, p) ->
+		acc @
+			DateMap.fold (fun d rating acc' ->
+				Printf.sprintf "%s: %s %.1f" p.name (Date.string_of d) rating :: acc')
+			p.history []
+	) [] players
+
 let play players nick1 nick2 result date =
 	let player1 = List.assoc nick1 players in
 	let player2 = List.assoc nick2 players in
@@ -170,7 +178,11 @@ let print_summary title players_path games_path rev_chron gh_pages =
 	print_endline (string_of_section (strings_of_games ~rev_chron players games));
 	()
 
-let print_history players_path games_path = ()
+let print_history players_path games_path =
+	let players = read_players players_path in
+	let games = read_games games_path in
+	List.iter print_endline (strings_of_history (play_games players games));
+	()
 
 (* Command line interface *)
 
