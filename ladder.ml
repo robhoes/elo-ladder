@@ -198,7 +198,7 @@ let print_summary title players_path games_path rev_chron gh_pages =
 	print_endline (string_of_section (strings_of_games ~rev_chron players games));
 	()
 
-let print_history players_path games_path =
+let print_history players_path games_path fmt =
 	let players = read_players players_path in
 	let games = read_games games_path in
 	List.iter print_endline (strings_of_history (play_games players games));
@@ -278,6 +278,13 @@ let print_cmd =
 	Term.info "print" ~doc ~man
 
 let history_cmd =
+	let fmt =
+		let doc =
+			"Format in which to print the history; either `csv' or `gnuplot'."
+		in
+		let fmt = Arg.enum ["csv", `Csv; "gnuplot", `Gnuplot] in
+		Arg.(required & opt (some fmt) None & info ["format"] ~doc)
+	in
 	let doc = "Compute and print historic ratings of players for plotting" in
 	let man = [
 		`S "DESCRIPTION";
@@ -286,7 +293,7 @@ let history_cmd =
 			    $(i,GAMES) and outputs these as datapoints in CSV format"
 		] @ help_secs
 	in
-	Term.(pure print_history $ players_path $ games_path),
+	Term.(pure print_history $ players_path $ games_path $ fmt),
 	Term.info "history" ~doc ~man
 
 let default_cmd =
