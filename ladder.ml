@@ -76,7 +76,7 @@ let strings_of_games ~rev_chron players games =
 	in
 	if rev_chron then List.rev lines else lines
 
-let strings_of_history players =
+let csv_strings_of_history players =
 	let combined_history =
 		List.fold_left (fun combined_h (_, p) ->
 			DateMap.fold (fun d rating acc ->
@@ -103,6 +103,8 @@ let strings_of_history players =
 		) combined_history []
 	in
 	headings :: (List.rev lines)
+
+let gnuplot_strings_of_history players = []
 
 let play players nick1 nick2 result date =
 	let player1 = List.assoc nick1 players in
@@ -201,7 +203,10 @@ let print_summary title players_path games_path rev_chron gh_pages =
 let print_history players_path games_path fmt =
 	let players = read_players players_path in
 	let games = read_games games_path in
-	List.iter print_endline (strings_of_history (play_games players games));
+	let str_f = match fmt with
+	| `Csv -> csv_strings_of_history | `Gnuplot -> gnuplot_strings_of_history
+	in
+	play_games players games |> str_f |> List.iter print_endline;
 	()
 
 (* Command line interface *)
