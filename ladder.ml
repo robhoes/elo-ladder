@@ -77,12 +77,32 @@ let strings_of_games ~rev_chron players games =
 	if rev_chron then List.rev lines else lines
 
 let strings_of_history players =
-	List.fold_left (fun acc (_, p) ->
-		acc @
-			DateMap.fold (fun d rating acc' ->
-				Printf.sprintf "%s: %s %.1f" p.name (Date.string_of d) rating :: acc')
-			p.history []
-	) [] players
+	let combined_history =
+		List.fold_left (fun combined_h (_, p) ->
+			DateMap.fold (fun d rating acc ->
+				(* Printf.sprintf "%s: %s %.1f" p.name (Date.string_of d) rating :: acc') *)
+				try DateMap.add d ((p.name, rating) :: (DateMap.find d acc)) acc
+				with Not_found -> DateMap.add d [(p.name, rating)] acc
+			) p.history combined_h
+		) DateMap.empty players
+	in
+	let headings = "Date," ^
+		(List.map (fun (_, p) -> p.name) players |> String.concat ",")
+	in
+	let lines =
+		DateMap.fold (fun d rs acc ->
+			let ratings_list =
+				List.map (fun (_, p) ->
+					try Printf.sprintf "%f" (List.assoc p.name rs)
+					with Not_found -> ""
+				) players
+			in
+			(ratings_list |> String.concat ","
+				|> Printf.sprintf "%s,%s" (Date.string_of d))
+			:: acc
+		) combined_history []
+	in
+	headings :: (List.rev lines)
 
 let play players nick1 nick2 result date =
 	let player1 = List.assoc nick1 players in
