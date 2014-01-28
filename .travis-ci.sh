@@ -14,7 +14,7 @@ esac
 
 echo "yes" | sudo add-apt-repository ppa:$ppa
 sudo apt-get update -qq
-sudo apt-get install -qq ocaml ocaml-native-compilers camlp4-extra opam
+sudo apt-get install -qq ocaml ocaml-native-compilers camlp4-extra opam gnuplot
 export OPAMYES=1
 export OPAMVERBOSE=1
 echo OCaml version
@@ -30,13 +30,20 @@ eval `opam config -env`
 
 # Post-boilerplate
 make
-./ladder --gh-pages --title "XenServer Chess Ladder" players games --reverse > index.md
+./ladder print --gh-pages --title "XenServer Chess Ladder" players games --reverse > index.md
+./ladder history --format=gnuplot players games > ladder.gnuplot
+(echo set terminal png linewidth 8 size 5120,3840 font arial 64; \
+ echo set border lw 0.5; \
+ echo set pointsize 8; \
+ echo set key spacing 0.25; \
+ cat ladder.gnuplot) | gnuplot | convert - +matte -resize 640 ladder.png
 
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   echo -e "Starting to update gh-pages\n"
 
   #copy data we're interested in to other place
   cp index.md $HOME/index.md
+  cp ladder.png $HOME/ladder.png
 
   #go to home and setup git
   cd $HOME
@@ -49,9 +56,11 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   #go into diractory and copy data we're interested in to that directory
   cd gh-pages
   cp -f $HOME/index.md .
+  cp -f $HOME/ladder.png .
 
   #add, commit and push files
   git add index.md
+  git add ladder.png
   git commit --allow-empty -m "Travis build $TRAVIS_BUILD_NUMBER pushed to gh-pages"
   git push -fq origin gh-pages > /dev/null
 
