@@ -321,7 +321,7 @@ let default_cmd =
 	let doc = "An Elo ladder system" in
 	let man = help_secs in
 	Term.(ret (pure (`Help (`Pager, None)))),
-	Term.info "ladder" ~version:"0.1a" ~doc ~man
+	Term.info "ladder" ~version:"0.2" ~doc ~man
 
 let cmds = [ print_cmd; history_cmd ]
 
