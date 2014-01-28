@@ -106,12 +106,18 @@ let csv_strings_of_history players =
 
 let gnuplot_strings_of_history players =
 	let open Printf in
-	let preamble = ["set xdata time"; "set timefmt '%Y-%m-%d'";
-		"set format x '%d/%m'"; "set datafile separator '\\t'"]
+	let preamble = [
+		"set xdata time";
+		"set key bottom left";
+		"set timefmt '%Y-%m-%d'";
+		"set format x '%d/%m'";
+		"set datafile separator '\\t'";
+		"plot \\";
+		]
 	in
 	let header =
 		List.map (fun (_, p) ->
-			sprintf "plot '-' using 1:2 with linespoints title '%s'" p.name
+			sprintf "'-' using 1:2 with linespoints title '%s', \\" p.name
 		) players
 	in
 	List.map (fun (_, p) ->
@@ -120,7 +126,7 @@ let gnuplot_strings_of_history players =
 		) p.history []
 	) players
 	|> List.map (fun l -> l @ ["end"]) |> List.flatten
-	|> List.append (preamble @ header)
+	|> List.append (preamble @ header @ ["1 / 0 notitle"])
 
 let play players nick1 nick2 result date =
 	let player1 = List.assoc nick1 players in

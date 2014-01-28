@@ -31,12 +31,7 @@ eval `opam config -env`
 # Post-boilerplate
 make
 ./ladder print --gh-pages --title "XenServer Chess Ladder" players games --reverse > index.md
-./ladder history --format=gnuplot players games > ladder.gnuplot
-(echo set terminal png linewidth 8 size 5120,3840 font arial 64; \
- echo set border lw 0.5; \
- echo set pointsize 8; \
- echo set key spacing 0.25; \
- cat ladder.gnuplot) | gnuplot | convert - +matte -resize 640 ladder.png
+(echo set terminal png; ./ladder history --format=gnuplot players games) | gnuplot > ladder.png
 
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   echo -e "Starting to update gh-pages\n"
