@@ -107,7 +107,7 @@ let csv_strings_of_history players =
 let gnuplot_strings_of_history players =
 	let open Printf in
 	let preamble = [
-		"set term png size 1600,1050 linewidth 1.75 enhanced font \"Helvetica,14\"";
+		"set term pngcairo size 1600,1050 linewidth 1.75 enhanced font \"Helvetica,14\"";
 		"set xdata time";
 		"set key bottom left";
 		"set timefmt '%Y-%m-%d'";
@@ -127,7 +127,7 @@ let gnuplot_strings_of_history players =
 	let dotted_tails =
 		List.mapi (fun i (_, p) ->
 			let (latest_d, latest_r) = DateMap.max_binding p.history in
-			sprintf "set arrow from first \"%s\", first %.1f to graph 1, first %.1f nohead lc %d lt 0"
+			sprintf "set arrow from first \"%s\", first %.1f to graph 1, first %.1f nohead lc %d lw 2 lt 0"
 				(Date.string_of latest_d) latest_r latest_r (succ i)
 		) players
 	in
