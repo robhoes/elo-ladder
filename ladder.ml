@@ -107,17 +107,27 @@ let csv_strings_of_history players =
 let gnuplot_strings_of_history players =
 	let open Printf in
 	let preamble = [
+		"set term png size 1600,1050 linewidth 1.75 enhanced font \"Helvetica,14\"";
 		"set xdata time";
 		"set key bottom left";
 		"set timefmt '%Y-%m-%d'";
 		"set format x '%d/%m'";
 		"set datafile separator '\\t'";
+		"# Border";
+		"set style line 200 lc rgb '#000000' lt 1 lw 1";
+		"set border 3 back ls 200";
+		"# Gridlines";
+		"set style line 201 lc rgb '#808080' lt 0 lw 1";
+		"set grid back ls 201";
+		"# Axis";
+		"set xtics nomirror";
+		"set ytics nomirror";
 		"plot \\";
 		]
 	in
 	let header =
-		List.map (fun (_, p) ->
-			sprintf "'-' using 1:2 with linespoints title '%s', \\" p.name
+		List.mapi (fun i (_, p) ->
+			sprintf "'-' using 1:2 with linespoints ls %d pi -1 pt 7 ps 0.75 title '%s', \\" (i + 1) p.name
 		) players
 	in
 	List.map (fun (_, p) ->
