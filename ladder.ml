@@ -35,17 +35,16 @@ type player = {
 	id: int;
 }
 
+let sort_by_rating players =
+	List.sort (fun (_, {rating=r}) (_, {rating=r'}) -> compare r' r) players
+
 let strings_of_ladder players =
-	let sorted = 
-		List.sort (fun (_, {rating=rating1}) (_, {rating=rating2}) ->
-			compare rating2 rating1)
-		players
-	in
-	List.mapi (fun rank (_, p) ->
+	(sort_by_rating players)
+	|> List.mapi (fun rank (_, p) ->
 		Printf.sprintf "%2d.  %-30s  %-1s  %4d  (%g / %d)" (succ rank) p.name
 		(if not p.active then "☠" else "")
 			(int_of_float p.rating) p.points_won p.game_count;
-	) sorted
+	)
 
 let play' p1 p2 result date =
 	let update1, update2 = get_updates p1.rating p2.rating result in
@@ -106,6 +105,7 @@ let csv_strings_of_history players =
 	headings :: (List.rev lines)
 
 let gnuplot_strings_of_history players =
+	let players = sort_by_rating players in
 	let open Printf in
 	let preamble = [
 		"set term pngcairo size 1600,1050 linewidth 1.75 enhanced font \"Helvetica,14\"";
