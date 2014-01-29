@@ -122,21 +122,30 @@ let gnuplot_strings_of_history players =
 		"# Axis";
 		"set xtics nomirror";
 		"set ytics nomirror";
-		"plot \\";
 		]
 	in
-	let header =
+	let dotted_tails =
 		List.mapi (fun i (_, p) ->
-			sprintf "'-' using 1:2 with linespoints ls %d pi -1 pt 7 ps 0.75 title '%s', \\" (i + 1) p.name
+			let (latest_d, latest_r) = DateMap.max_binding p.history in
+			sprintf "set arrow from first \"%s\", first %.1f to graph 1, first %.1f nohead lc %d lt 0"
+				(Date.string_of latest_d) latest_r latest_r (succ i)
 		) players
 	in
+	let plot_cmds =
+		"plot \\" ::
+		List.mapi (fun i (_, p) ->
+			sprintf "'-' using 1:2 with linespoints lc %d pi -1 pt 7 ps 0.75 title '%s', \\"
+				(succ i) p.name
+		) players
+	in
+	(* Data *)
 	List.map (fun (_, p) ->
 		DateMap.fold (fun d r acc ->
 			(sprintf "%s\t%.1f" (Date.string_of d) r) :: acc
 		) p.history []
 	) players
 	|> List.map (fun l -> l @ ["end"]) |> List.flatten
-	|> List.append (preamble @ header @ ["1 / 0 notitle"])
+	|> List.append (preamble @ dotted_tails @ plot_cmds @ ["1 / 0 notitle"])
 
 let play players nick1 nick2 result date =
 	let player1 = List.assoc nick1 players in
