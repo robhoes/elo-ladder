@@ -35,6 +35,12 @@ type player = {
 	id: int;
 }
 
+let replace n p l =
+	let l = List.remove_assoc n l in
+	(n, p) :: l
+
+let (|>) x f = f x
+
 let sort_by_rating players =
 	List.sort (fun (_, {rating=r}) (_, {rating=r'}) -> compare r' r) players
 
@@ -52,12 +58,6 @@ let play' p1 p2 result date =
 		game_count = p1.game_count + 1; points_won = p1.points_won +. result},
 	{p2 with rating = update2; history = DateMap.add date update2 p2.history;
 		game_count = p2.game_count + 1; points_won = p2.points_won +. 1. -. result}
-
-let replace n p l =
-	let l = List.remove_assoc n l in
-	(n, p) :: l
-
-let (|>) x f = f x
 
 let string_of_result = function
 	| 1. -> "  1 - 0"
