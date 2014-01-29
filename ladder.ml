@@ -303,6 +303,11 @@ let print_summary title players_path games_path rev_chron gh_pages =
 	print_endline (string_of_heading ~gh_pages "Ladder");
 	print_endline (string_of_section (strings_of_ladder (play_games players games)));
 
+	let nicks = active_nicks players in
+	print_endline (string_of_heading ~gh_pages "Suggested games (least played)");
+	print_endline (string_of_section (stats nicks games |> suggested_matches nicks |>
+		strings_of_matches players));
+
 	print_endline (string_of_heading ~gh_pages "Games");
 	print_endline (string_of_section (strings_of_games ~rev_chron players games));
 	()
