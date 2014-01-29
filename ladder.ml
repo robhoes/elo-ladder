@@ -159,6 +159,69 @@ let play_games players games =
 		play players nick1 nick2 result date
 	) players games
 
+let active_nicks players =
+	let nicks = List.fold_left (fun nicks (nick, {active}) -> if active then nick :: nicks else nicks) [] players in
+	List.sort compare nicks
+
+let strings_of_stats players stats =
+	let print ((nick1, nick2), (count, balance)) =
+		let player1 = List.assoc nick1 players in
+		let player2 = List.assoc nick2 players in
+		Printf.sprintf "%20s - %-20s    %2d  %3d" player1.name player2.name count balance
+	in
+	List.map print stats
+
+let combine l =
+	let rec aux k acc emit = function
+		| [] -> acc
+		| h :: t ->
+			if k = 1 then
+				aux k (emit [h] acc) emit t
+			else
+				let new_emit x = emit (h :: x) in
+				aux k (aux (k-1) acc new_emit t) emit t
+	in
+	let emit x acc = x :: acc in
+	aux 2 [] emit l
+
+let stats nicks games =
+	let combinations = combine nicks in
+	let combinations = List.map (function [x; y] -> (x, y), (0, 0) | _ -> failwith "boom!") combinations in
+	let results = List.fold_left (fun r (_, nick1, nick2, _) ->
+		let pair, colour = if compare nick1 nick2 < 0 then (nick1, nick2), 1 else (nick2, nick1), -1 in
+		try
+			let count, balance = List.assoc pair r in
+			replace pair (count + 1, balance + colour) r
+		with Not_found -> r
+	) combinations games in
+	List.sort (fun (_, (x, _)) (_, (y, _)) -> x - y) results
+
+let strings_of_matches players matches =
+	let print (nick1, nick2) =
+		let player1 = List.assoc nick1 players in
+		let player2 = List.assoc nick2 players in
+		Printf.sprintf "%20s - %s" player1.name player2.name
+	in
+	List.map print (List.rev matches)
+
+let remove_first x l =
+	let rec loop ac = function
+	| [] -> ac
+	| hd :: tl -> if hd = x then ac @ tl else loop (hd :: ac) tl
+	in
+	loop [] l
+
+let suggested_matches nicks stats =
+	let count_limit = match stats with [] -> 0 | (_, (c, _)) :: _ -> c + 1 in
+	let _, matches = List.fold_left (fun (remaining_nicks, matches) ((nick1, nick2), (count, balance)) ->
+		if List.mem nick1 remaining_nicks && List.mem nick2 remaining_nicks && count <= count_limit then
+			remaining_nicks |> remove_first nick1 |> remove_first nick2,
+			if balance < 0 then (nick1, nick2) :: matches else (nick2, nick1) :: matches
+		else
+			remaining_nicks, matches
+	) (nicks, []) stats in
+	matches
+
 (* filing *)
 
 let line_stream_of_channel channel =
