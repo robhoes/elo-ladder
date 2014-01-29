@@ -321,6 +321,14 @@ let print_history players_path games_path fmt =
 	play_games players games |> str_f |> List.iter print_endline;
 	()
 
+let print_stats players_path games_path =
+	let players = read_players players_path in
+	let games = read_games games_path in
+	let nicks = active_nicks players in
+	print_endline (string_of_heading ~gh_pages:false "Statistics");
+	print_endline (string_of_section (stats nicks games |> strings_of_stats players));
+	()
+
 (* Command line interface *)
 
 open Cmdliner
@@ -413,13 +421,26 @@ let history_cmd =
 	Term.(pure print_history $ players_path $ games_path $ fmt),
 	Term.info "history" ~doc ~man
 
+let stats_cmd =
+	let doc = "Compute and print stats based on the ELO ladder" in
+	let man = [
+		`S "DESCRIPTION";
+			`P "$(tname) computes, for each pair of players, the number of games
+				they have played against each other, and the balance of white and
+				black games. The stats are for the players specified in
+				$(i,PLAYERS) after playing the games specified in $(i,GAMES).";
+			] @ help_secs
+	in
+	Term.(pure print_stats $ players_path $ games_path),
+	Term.info "stats" ~doc ~man
+
 let default_cmd =
 	let doc = "An Elo ladder system" in
 	let man = help_secs in
 	Term.(ret (pure (`Help (`Pager, None)))),
 	Term.info "ladder" ~version:"0.2" ~doc ~man
 
-let cmds = [ print_cmd; history_cmd ]
+let cmds = [ print_cmd; history_cmd; stats_cmd ]
 
 let _ =
 	match Term.eval_choice default_cmd cmds with
