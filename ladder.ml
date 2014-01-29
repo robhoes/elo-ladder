@@ -32,6 +32,7 @@ type player = {
 	game_count: int;
 	points_won: float;
 	active: bool;
+	id: int;
 }
 
 let strings_of_ladder players =
@@ -125,17 +126,17 @@ let gnuplot_strings_of_history players =
 		]
 	in
 	let dotted_tails =
-		List.mapi (fun i (_, p) ->
+		List.map (fun (_, p) ->
 			let (latest_d, latest_r) = DateMap.max_binding p.history in
 			sprintf "set arrow from first \"%s\", first %.1f to graph 1, first %.1f nohead lc %d lw 2 lt 0"
-				(Date.string_of latest_d) latest_r latest_r (succ i)
+				(Date.string_of latest_d) latest_r latest_r p.id
 		) players
 	in
 	let plot_cmds =
 		"plot \\" ::
-		List.mapi (fun i (_, p) ->
+		List.map (fun (_, p) ->
 			sprintf "'-' using 1:2 with linespoints lc %d pi -1 pt 7 ps 0.75 title '%s', \\"
-				(succ i) p.name
+				p.id p.name
 		) players
 	in
 	(* Data *)
@@ -166,17 +167,19 @@ let line_stream_of_channel channel =
 	)
 
 let read_players path =
-	let parse_player_line line =
+	let parse_player_line id line =
 		Scanf.sscanf line "%s@,%s@,%f,%b"
 			(fun nick name rating active ->
-				nick, {name; rating; history = DateMap.empty; game_count = 0; points_won = 0.; active})
+				nick, {name; rating; history = DateMap.empty; game_count = 0; points_won = 0.; active; id})
 	in
 	let in_channel = open_in path in
 	let players = ref [] in
+	let id = ref 0 in
 	begin
 		try
 			Stream.iter (fun line ->
-				players := parse_player_line line :: !players)
+				id := succ !id;
+				players := parse_player_line !id line :: !players)
 				(line_stream_of_channel in_channel);
 			close_in in_channel;
 		with e ->
