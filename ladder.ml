@@ -108,9 +108,10 @@ let gnuplot_strings_of_history players =
 	let players = sort_by_rating players in
 	let open Printf in
 	let preamble = [
-		"set term pngcairo size 1600,1050 linewidth 1.75 enhanced font \"Helvetica,14\"";
+		"set term pngcairo size 1920,1080 linewidth 1.75 enhanced font \"Droid Sans,18\"";
+		"set title 'XenServer Chess Ladder' font \"Droid Sans,34\"";
 		"set xdata time";
-		"set key bottom left";
+		"set key rmargin bottom reverse Left";
 		"set timefmt '%Y-%m-%d'";
 		"set format x '%d/%m'";
 		"set datafile separator '\\t'";
@@ -123,6 +124,8 @@ let gnuplot_strings_of_history players =
 		"# Axis";
 		"set xtics nomirror";
 		"set ytics nomirror";
+		"# Other styling";
+		"set pointintervalbox 2";
 		]
 	in
 	let dotted_tails =
@@ -135,8 +138,8 @@ let gnuplot_strings_of_history players =
 	let plot_cmds =
 		"plot \\" ::
 		List.map (fun (_, p) ->
-			sprintf "'-' using 1:2 with linespoints lc %d pi -1 pt 7 ps 0.75 title '%s', \\"
-				p.id p.name
+			sprintf "'-' using 1:2 with linespoints lc %d pi -1 pt 7 ps 0.75 title '%4d  %s', \\"
+				p.id (int_of_float p.rating) p.name
 		) players
 	in
 	(* Data *)
