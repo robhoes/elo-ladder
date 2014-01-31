@@ -131,14 +131,14 @@ let gnuplot_strings_of_history players =
 	let dotted_tails =
 		List.map (fun (_, p) ->
 			let (latest_d, latest_r) = DateMap.max_binding p.history in
-			sprintf "set arrow from first \"%s\", first %.1f to graph 1, first %.1f nohead lc %d lw 2 lt 0"
+			sprintf "set arrow from first \"%s\", first %.1f to graph 1, first %.1f nohead lc %d lw 3 lt 0"
 				(Date.string_of latest_d) latest_r latest_r p.id
 		) (List.filter (fun (_, p) -> p.active) players)
 	in
 	let plot_cmds =
 		"plot \\" ::
 		List.map (fun (_, p) ->
-			sprintf "'-' using 1:2 with linespoints lc %d pi -1 pt %d ps 0.75 title '%4d  %s', \\"
+			sprintf "'-' using 1:2 with linespoints lc %d lw 2 pi -1 pt %d ps 1.2 title '%4d  %s', \\"
 				p.id p.id (int_of_float p.rating) p.name
 		) players
 	in
