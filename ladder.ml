@@ -133,7 +133,7 @@ let gnuplot_strings_of_history players =
 			let (latest_d, latest_r) = DateMap.max_binding p.history in
 			sprintf "set arrow from first \"%s\", first %.1f to graph 1, first %.1f nohead lc %d lw 2 lt 0"
 				(Date.string_of latest_d) latest_r latest_r p.id
-		) players
+		) (List.filter (fun (_, p) -> p.active) players)
 	in
 	let plot_cmds =
 		"plot \\" ::
