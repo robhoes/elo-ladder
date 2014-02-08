@@ -41,6 +41,19 @@ let replace n p l =
 
 let (|>) x f = f x
 
+let json_of_player p =
+	let open Json in
+	Object [
+		"name", String p.name;
+		"rating", Number p.rating;
+		"game_count", Number (float_of_int p.game_count);
+		"points_won", Number p.points_won;
+		"active", Boolean p.active;
+	]
+
+let json_of_players ps =
+	Json.Array (List.map (fun (_, p) -> json_of_player p) ps)
+
 let sort_by_rating players =
 	List.sort (fun (_, {rating=r}) (_, {rating=r'}) -> compare r' r) players
 
@@ -75,6 +88,24 @@ let strings_of_games ~rev_chron players games =
 		) games
 	in
 	if rev_chron then List.rev lines else lines
+	
+let json_of_game date name1 name2 result =
+	let open Json in
+	Object [
+		"date", String (Date.string_of date);
+		"name1", String name1;
+		"name2", String name2;
+		"result", Number result;
+	]
+	
+let json_of_games players games =
+	Json.Array (
+		List.map (fun (date, nick1, nick2, result) ->
+			let player1 = List.assoc nick1 players in
+			let player2 = List.assoc nick2 players in
+			json_of_game date player1.name player2.name result
+		) games
+	)
 
 let csv_strings_of_history players =
 	let combined_history =
@@ -332,6 +363,18 @@ let print_stats players_path games_path =
 	print_endline (string_of_section (stats nicks games |> strings_of_stats players));
 	()
 
+let print_json players_path games_path =
+	let players = read_players players_path in
+	let games = read_games games_path in
+	
+	let players = play_games players games in
+	let json = "players = " ^ (Json.to_string (json_of_players players)) in
+	print_endline (json);
+	
+	let json = "games = " ^ (Json.to_string (json_of_games players games)) in
+	print_endline (json);
+	()
+
 (* Command line interface *)
 
 open Cmdliner
@@ -436,6 +479,17 @@ let stats_cmd =
 	in
 	Term.(pure print_stats $ players_path $ games_path),
 	Term.info "stats" ~doc ~man
+	
+let json_cmd =
+	let doc = "JSON" in
+	let man = [
+		`S "DESCRIPTION";
+			`P "$(tname) ... The stats are for the players specified in
+				$(i,PLAYERS) after playing the games specified in $(i,GAMES).";
+			] @ help_secs
+	in
+	Term.(pure print_json $ players_path $ games_path),
+	Term.info "json" ~doc ~man
 
 let default_cmd =
 	let doc = "An Elo ladder system" in
@@ -443,7 +497,7 @@ let default_cmd =
 	Term.(ret (pure (`Help (`Pager, None)))),
 	Term.info "ladder" ~version:"0.2" ~doc ~man
 
-let cmds = [ print_cmd; history_cmd; stats_cmd ]
+let cmds = [ print_cmd; history_cmd; stats_cmd; json_cmd]
 
 let _ =
 	match Term.eval_choice default_cmd cmds with
