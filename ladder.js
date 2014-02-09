@@ -121,7 +121,17 @@ function build_games()
 function build_suggestions()
 {
 	var div = document.getElementById("results");
-	div.innerHTML = "<h2>Next Games</h2><p>...to do...</p>";
+	div.innerHTML = "<h2>Next Games</h2>";
+	
+	var rows = suggestions.map(function(p){
+		return [
+			p.name1,
+			p.name2
+		]}
+	);
+	
+	var table = make_table(rows, ["White", "Black"]);
+	div.appendChild(table);
 }
 
 function build_graph()

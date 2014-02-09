@@ -239,3 +239,9 @@ games = [ { "date": "2013-11-15",
 "name1": "Andrew Bennieston",
 "name2": "Jonathan Davies",
 "result": 1.0000 } ]
+suggestions = [ { "name1": "Thomas Sanders",
+"name2": "Si Beaumont" }, { "name1": "Stephen Turner",
+"name2": "Marcus Granado" }, { "name1": "John Else",
+"name2": "Felipe Franciosi" }, { "name1": "Dave Scott",
+"name2": "Andrew Bennieston" }, { "name1": "Rob Hoes",
+"name2": "Jonathan Davies" } ]
