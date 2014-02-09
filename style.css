@@ -257,3 +257,11 @@ footer {
     color:#444;
   }
 }
+
+.up {
+  color:green;
+}
+
+.down {
+  color:red;
+}

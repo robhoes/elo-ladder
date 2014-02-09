@@ -45,7 +45,7 @@ let json_of_player p =
 	let open Json in
 	Object [
 		"name", String p.name;
-		"rating", Number p.rating;
+		"ratings", Array (List.rev (DateMap.fold (fun _ x rs -> (Number x) :: rs) p.history []));
 		"game_count", Number (float_of_int p.game_count);
 		"points_won", Number p.points_won;
 		"active", Boolean p.active;

@@ -6,10 +6,11 @@ function compare(a, b)
 	return 0;
 }
 
-function make_table(rows)
+function make_table(rows, header)
 {
 	var table = document.createElement('table');
-
+	var head = true;
+	
 	function make_tr(row)
 	{
 		var tr = document.createElement('tr');
@@ -17,7 +18,7 @@ function make_table(rows)
 	
 		function make_td(x)
 		{
-			var td = document.createElement('td');
+			var td = document.createElement(head == true ? 'th' : 'td');
 			td.innerHTML = x
 			tr.appendChild(td);
 		}
@@ -25,6 +26,8 @@ function make_table(rows)
 	
 		return tr;
 	}
+	make_tr(header);
+	head = false;
 	rows.forEach(make_tr);
 	
 	return table
@@ -32,19 +35,23 @@ function make_table(rows)
 
 function build_ladder()
 {	
-	players.sort(function(a, b){return -compare(a.rating, b.rating)});
+	players.sort(function(a, b){return -compare(a.ratings[a.ratings.length-1], b.ratings[b.ratings.length-1])});
 	
 	var i = 1;
 	var rows = players.map(function(p){
+		var last = p.ratings.pop();
+		var diff = Math.round(last - p.ratings.pop());
 		return [
 			i++,
-			p.name,
-			Math.round(p.rating),
+			p.name + (p.active ? "" : " [inactive]"),
+			Math.round(last),
+			'<span class=' + (diff > 0 ? '"up">+' : '"down">') + diff + '</span>',
 			p.points_won + " / " + p.game_count
 		]}
 	);
 	
-	document.getElementById('ladder').appendChild(make_table(rows));
+	var table = make_table(rows, ["Rank", "Name", "Rating", "Diff", "Score / Games"]);
+	document.getElementById('ladder').appendChild(table);
 }
 
 function string_of_result(result)
@@ -72,9 +79,10 @@ function refresh_games_table(div, x)
 		]}
 	);
 	
+	var table = make_table(rows, ["Date", "White", "Black", "Result"]);
 	if (div.hasChildNodes())
 		div.removeChild(div.firstChild);
-	div.appendChild(make_table(rows));
+	div.appendChild(table);
 }
 
 function build_games()
