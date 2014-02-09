@@ -236,7 +236,23 @@ let strings_of_matches players matches =
 		let player2 = List.assoc nick2 players in
 		Printf.sprintf "%20s - %s" player1.name player2.name
 	in
-	List.map print (List.rev matches)
+	List.map print matches
+
+let json_of_pair name1 name2 =
+	let open Json in
+	Object [
+		"name1", String name1;
+		"name2", String name2;
+	]
+	
+let json_of_matches players matches =
+	Json.Array (
+		List.map (fun (nick1, nick2) ->
+			let player1 = List.assoc nick1 players in
+			let player2 = List.assoc nick2 players in
+			json_of_pair player1.name player2.name
+		) matches
+	)
 
 let remove_first x l =
 	let rec loop ac = function
@@ -254,7 +270,7 @@ let suggested_matches nicks stats =
 		else
 			remaining_nicks, matches
 	) (nicks, []) stats in
-	matches
+	List.rev matches
 
 (* filing *)
 
@@ -372,6 +388,11 @@ let print_json players_path games_path =
 	print_endline (json);
 	
 	let json = "games = " ^ (Json.to_string (json_of_games players games)) in
+	print_endline (json);
+	
+	let nicks = active_nicks players in
+	let suggestions = stats nicks games |> suggested_matches nicks in
+	let json = "suggestions = " ^ (Json.to_string (json_of_matches players suggestions)) in
 	print_endline (json);
 	()
 
