@@ -35,12 +35,15 @@ function make_table(rows, header)
 
 function build_ladder()
 {	
+	var div = document.getElementById('results');
+	div.innerHTML = "<h2>Ladder</h2>";
+	
 	players.sort(function(a, b){return -compare(a.ratings[a.ratings.length-1], b.ratings[b.ratings.length-1])});
 	
 	var i = 1;
 	var rows = players.map(function(p){
-		var last = p.ratings.pop();
-		var diff = Math.round(last - p.ratings.pop());
+		var last = p.ratings[p.ratings.length-1];
+		var diff = Math.round(last - p.ratings[p.ratings.length-2]);
 		return [
 			i++,
 			p.name + (p.active ? "" : " [inactive]"),
@@ -51,7 +54,7 @@ function build_ladder()
 	);
 	
 	var table = make_table(rows, ["Rank", "Name", "Rating", "Diff", "Score / Games"]);
-	document.getElementById('ladder').appendChild(table);
+	div.appendChild(table);
 }
 
 function string_of_result(result)
@@ -87,7 +90,8 @@ function refresh_games_table(div, x)
 
 function build_games()
 {
-	var div = document.getElementById("games");
+	var div = document.getElementById("results");
+	div.innerHTML = "<h2>Past Games</h2>";
 	
 	var menu = document.createElement("select");
 	div.appendChild(menu);
@@ -114,8 +118,19 @@ function build_games()
 	refresh_games_table(games_table, "");
 }
 
+function build_suggestions()
+{
+	var div = document.getElementById("results");
+	div.innerHTML = "<h2>Next Games</h2><p>...to do...</p>";
+}
+
+function build_graph()
+{
+	var div = document.getElementById("results");
+	div.innerHTML = '<h2>Graph</h2><a href="ladder.png"><img src="ladder.png" style="width:500px" /></a>';
+}
+
 function build()
 {
 	build_ladder();
-	build_games();
 }

@@ -105,7 +105,7 @@ header {
   position:fixed;
 }
 
-header ul {
+ul {
   list-style:none;
   height:40px;
   
@@ -122,17 +122,24 @@ header ul {
   border-radius:5px;
   border:1px solid #d2d2d2;
   box-shadow:inset #fff 0 1px 0, inset rgba(0,0,0,0.03) 0 -1px 0;
+}
+
+header ul {
   width:270px;
 }
 
-header li {
-  width:89px;
+section ul {
+  width:360px;
+}
+
+li {
   float:left;
   border-right:1px solid #d2d2d2;
   height:40px;
+  width:89px;
 }
 
-header ul a {
+ul a {
   line-height:1;
   font-size:11px;
   color:#999;
@@ -140,6 +147,7 @@ header ul a {
   text-align:center;
   padding-top:6px;
   height:40px;
+  cursor:hand;
 }
 
 strong {
@@ -147,23 +155,24 @@ strong {
   font-weight:700;
 }
 
-header ul li + li {
+ul li + li {
   width:88px;
   border-left:1px solid #fff;
 }
 
-header ul li + li + li {
+ul li + li + li {
   border-right:none;
   width:89px;
 }
 
-header ul a strong {
+ul a strong {
   font-size:14px;
   display:block;
   color:#222;
 }
 
 section {
+  width:520px;
   float:right;
   padding-bottom:50px;
   margin-left:50px;
