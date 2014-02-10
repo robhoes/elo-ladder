@@ -10,12 +10,12 @@ function make_table(rows, header)
 {
 	var table = document.createElement('table');
 	var head = true;
-	
+
 	function make_tr(row)
 	{
 		var tr = document.createElement('tr');
 		table.appendChild(tr);
-	
+
 		function make_td(x)
 		{
 			var td = document.createElement(head == true ? 'th' : 'td');
@@ -23,25 +23,25 @@ function make_table(rows, header)
 			tr.appendChild(td);
 		}
 		row.forEach(make_td);
-	
+
 		return tr;
 	}
 	make_tr(header);
 	head = false;
 	rows.forEach(make_tr);
-	
+
 	return table
 }
 
 function build_ladder()
-{	
+{
 	var div = document.getElementById('results');
 	div.innerHTML = "<h2>Ladder</h2>";
-	
+
 	players.sort(function(a, b){return -compare(a.ratings[a.ratings.length-1], b.ratings[b.ratings.length-1])});
 	var active_players = players.filter(function(a){return a.active});
 	var inactive_players = players.filter(function(a){return !a.active});
-	
+
 	function build_rows(ps, active)
 	{
 		var i = 1;
@@ -89,10 +89,10 @@ function string_of_result(result)
 function refresh_games_table(div, x)
 {
 	games.sort(function(a, b){return -compare(a.date, b.date)});
-	
+
 	var filtered_games = games.filter(function(g){
 		return x == "" || g.name1 == x || g.name2 == x});
-	
+
 	var rows = filtered_games.map(function(p){
 		return [
 			p.date,
@@ -101,31 +101,22 @@ function refresh_games_table(div, x)
 			string_of_result(p.result)
 		]}
 	);
-	
+
 	var table = make_table(rows, ["Date", "White", "Black", "Result"]);
 	if (div.hasChildNodes())
 		div.removeChild(div.firstChild);
 	div.appendChild(table);
 }
 
-function build_games()
+function build_names_menu(menu, onchange)
 {
-	var div = document.getElementById("results");
-	div.innerHTML = "<h2>Past Games</h2>";
-	
-	var menu = document.createElement("select");
-	div.appendChild(menu);
-	
-	var games_table = document.createElement("div");
-	div.appendChild(games_table);
-	
-	menu.onchange = function(){refresh_games_table(games_table, this.value)};
-	
+	menu.onchange = onchange;
+
 	var option = document.createElement("option");
 	option.value = "";
 	option.innerHTML = "All";
 	menu.appendChild(option);
-	
+
 	var names = players.map(function(p){return p.name});
 	names.sort();
 	names.map(function(n){
@@ -134,7 +125,21 @@ function build_games()
 		option.innerHTML = n;
 		menu.appendChild(option);
 	});
-	
+}
+
+function build_games()
+{
+	var div = document.getElementById("results");
+	div.innerHTML = "<h2>Past Games</h2>";
+
+	var menu = document.createElement("select");
+	div.appendChild(menu);
+
+	var games_table = document.createElement("div");
+	div.appendChild(games_table);
+
+	build_names_menu(menu, function(){refresh_games_table(games_table, this.value)});
+
 	refresh_games_table(games_table, "");
 }
 
@@ -142,16 +147,52 @@ function build_suggestions()
 {
 	var div = document.getElementById("results");
 	div.innerHTML = "<h2>Next Games</h2>";
-	
+
 	var rows = suggestions.map(function(p){
 		return [
 			p.name1,
 			p.name2
 		]}
 	);
-	
+
 	var table = make_table(rows, ["White", "Black"]);
 	div.appendChild(table);
+}
+
+function refresh_stats_table(div, x)
+{
+	var filtered_stats = stats.filter(function(g){
+		return x == "" || g.name1 == x || g.name2 == x});
+
+	var rows = filtered_stats.map(function(p){
+		return [
+			p.name1,
+			p.name2,
+			p.count,
+			p.balance
+		]}
+	);
+
+	var table = make_table(rows, ["Player 1", "Player 2", "# Games", "Colour Balance"]);
+	if (div.hasChildNodes())
+		div.removeChild(div.firstChild);
+	div.appendChild(table);
+}
+
+function build_stats()
+{
+	var div = document.getElementById("results");
+	div.innerHTML = "<h2>Stats</h2>";
+
+	var menu = document.createElement("select");
+	div.appendChild(menu);
+
+	var stats_table = document.createElement("div");
+	div.appendChild(stats_table);
+
+	build_names_menu(menu, function(){refresh_stats_table(stats_table, this.value)});
+
+	refresh_stats_table(stats_table, "");
 }
 
 function build_graph()
