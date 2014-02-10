@@ -205,6 +205,24 @@ let strings_of_stats players stats =
 	in
 	List.map print stats
 
+let json_of_stat name1 name2 count balance =
+	let open Json in
+	Object [
+		"name1", String name1;
+		"name2", String name2;
+		"count", Number (float_of_int count);
+		"balance", Number (float_of_int balance);
+	]
+
+let json_of_stats players stats =
+	Json.Array (
+		List.map (fun ((nick1, nick2), (count, balance)) ->
+			let player1 = List.assoc nick1 players in
+			let player2 = List.assoc nick2 players in
+			json_of_stat player1.name player2.name count balance
+		) stats
+	)
+
 let combine l =
 	let rec aux k acc emit = function
 		| [] -> acc
@@ -391,7 +409,11 @@ let print_json players_path games_path =
 	print_endline (json);
 	
 	let nicks = active_nicks players in
-	let suggestions = stats nicks games |> suggested_matches nicks in
+	let stats = stats nicks games in
+	let json = "stats = " ^ (Json.to_string (json_of_stats players stats)) in
+	print_endline (json);
+
+	let suggestions = stats |> suggested_matches nicks in
 	let json = "suggestions = " ^ (Json.to_string (json_of_matches players suggestions)) in
 	print_endline (json);
 	()
