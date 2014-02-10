@@ -39,21 +39,41 @@ function build_ladder()
 	div.innerHTML = "<h2>Ladder</h2>";
 	
 	players.sort(function(a, b){return -compare(a.ratings[a.ratings.length-1], b.ratings[b.ratings.length-1])});
+	var active_players = players.filter(function(a){return a.active});
+	var inactive_players = players.filter(function(a){return !a.active});
 	
-	var i = 1;
-	var rows = players.map(function(p){
-		var last = p.ratings[p.ratings.length-1];
-		var diff = Math.round(last - p.ratings[p.ratings.length-2]);
-		return [
-			i++,
-			p.name + (p.active ? "" : " [inactive]"),
-			Math.round(last),
-			'<span class=' + (diff > 0 ? '"up">+' : '"down">') + diff + '</span>',
-			p.points_won + " / " + p.game_count
-		]}
-	);
-	
+	function build_rows(ps, active)
+	{
+		var i = 1;
+		var rows = ps.map(function(p){
+			var last = p.ratings[p.ratings.length-1];
+			var diff = Math.round(last - p.ratings[p.ratings.length-2]);
+			if (active)
+				return [
+					i++,
+					p.name,
+					Math.round(last),
+					'<span class=' + (diff > 0 ? '"up">+' : '"down">') + diff + '</span>',
+					p.points_won + " / " + p.game_count
+				]
+			else
+				return [
+					p.name,
+					Math.round(last),
+					p.points_won + " / " + p.game_count
+				]
+		}
+		);
+		return rows;
+	}
+
+	var rows = build_rows(active_players, true);
 	var table = make_table(rows, ["Rank", "Name", "Rating", "Diff", "Score / Games"]);
+	div.appendChild(table);
+
+	div.innerHTML += "<h2>Retired Players</h2>";
+	var rows = build_rows(inactive_players, false);
+	var table = make_table(rows, ["Name", "Rating", "Score / Games"]);
 	div.appendChild(table);
 }
 
