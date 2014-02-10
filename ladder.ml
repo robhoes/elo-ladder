@@ -524,11 +524,12 @@ let stats_cmd =
 	Term.info "stats" ~doc ~man
 	
 let json_cmd =
-	let doc = "JSON" in
+	let doc = "Output all available data in JSON format" in
 	let man = [
 		`S "DESCRIPTION";
-			`P "$(tname) ... The stats are for the players specified in
-				$(i,PLAYERS) after playing the games specified in $(i,GAMES).";
+			`P "$(tname) prints all available data in JSON format, for the
+			players specified in $(i,PLAYERS) after playing the games specified
+			in $(i,GAMES).";
 			] @ help_secs
 	in
 	Term.(pure print_json $ players_path $ games_path),
