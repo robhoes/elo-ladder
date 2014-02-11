@@ -28,7 +28,7 @@ module DateMap = Map.Make(Date)
 type player = {
 	name: string;
 	rating: float;
-	history: float DateMap.t;
+	history: (Date.t * float) list;
 	game_count: int;
 	points_won: float;
 	active: bool;
@@ -45,7 +45,7 @@ let json_of_player p =
 	let open Json in
 	Object [
 		"name", String p.name;
-		"ratings", Array (List.rev (DateMap.fold (fun _ x rs -> (Number x) :: rs) p.history []));
+		"ratings", Array (List.rev (List.fold_left (fun rs (_, x) -> (Number x) :: rs) [] p.history));
 		"game_count", Number (float_of_int p.game_count);
 		"points_won", Number p.points_won;
 		"active", Boolean p.active;
@@ -67,9 +67,9 @@ let strings_of_ladder players =
 
 let play' p1 p2 result date =
 	let update1, update2 = get_updates p1.rating p2.rating result in
-	{p1 with rating = update1; history = DateMap.add date update1 p1.history;
+	{p1 with rating = update1; history = (date, update1) :: p1.history;
 		game_count = p1.game_count + 1; points_won = p1.points_won +. result},
-	{p2 with rating = update2; history = DateMap.add date update2 p2.history;
+	{p2 with rating = update2; history = (date, update2) :: p2.history;
 		game_count = p2.game_count + 1; points_won = p2.points_won +. 1. -. result}
 
 let string_of_result = function
@@ -110,11 +110,12 @@ let json_of_games players games =
 let csv_strings_of_history players =
 	let combined_history =
 		List.fold_left (fun combined_h (_, p) ->
+			let map = List.fold_left (fun acc (d, r) -> DateMap.add d r acc) DateMap.empty p.history in
 			DateMap.fold (fun d rating acc ->
 				(* Printf.sprintf "%s: %s %.1f" p.name (Date.string_of d) rating :: acc') *)
 				try DateMap.add d ((p.name, rating) :: (DateMap.find d acc)) acc
 				with Not_found -> DateMap.add d [(p.name, rating)] acc
-			) p.history combined_h
+			) map combined_h
 		) DateMap.empty players
 	in
 	let headings = "Date," ^
@@ -161,7 +162,7 @@ let gnuplot_strings_of_history players =
 	in
 	let dotted_tails =
 		List.map (fun (_, p) ->
-			let (latest_d, latest_r) = DateMap.max_binding p.history in
+			let (latest_d, latest_r) = List.hd p.history in
 			sprintf "set arrow from first \"%s\", first %.1f to graph 1, first %.1f nohead lc %d lw 3 lt 0"
 				(Date.string_of latest_d) latest_r latest_r p.id
 		) (List.filter (fun (_, p) -> p.active) players)
@@ -175,9 +176,9 @@ let gnuplot_strings_of_history players =
 	in
 	(* Data *)
 	List.map (fun (_, p) ->
-		DateMap.fold (fun d r acc ->
+		List.fold_left (fun acc (d, r) ->
 			(sprintf "%s\t%.1f" (Date.string_of d) r) :: acc
-		) p.history []
+		) [] p.history
 	) players
 	|> List.map (fun l -> l @ ["end"]) |> List.flatten
 	|> List.append (preamble @ dotted_tails @ plot_cmds @ ["1 / 0 notitle"])
@@ -314,7 +315,7 @@ let read_players path =
 	let parse_player_line id line =
 		Scanf.sscanf line "%s@,%s@,%f,%b"
 			(fun nick name rating active ->
-				nick, {name; rating; history = DateMap.empty; game_count = 0; points_won = 0.; active; id})
+				nick, {name; rating; history = []; game_count = 0; points_won = 0.; active; id})
 	in
 	let in_channel = open_in path in
 	let players = ref [] in
