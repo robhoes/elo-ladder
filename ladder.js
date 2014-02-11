@@ -38,7 +38,7 @@ function build_ladder()
 	var div = document.getElementById('results');
 	div.innerHTML = "<h2>Ladder</h2>";
 
-	players.sort(function(a, b){return -compare(a.ratings[a.ratings.length-1], b.ratings[b.ratings.length-1])});
+	players.sort(function(a, b){return -compare(a.ratings[0], b.ratings[0])});
 	var active_players = players.filter(function(a){return a.active});
 	var inactive_players = players.filter(function(a){return !a.active});
 
@@ -46,8 +46,8 @@ function build_ladder()
 	{
 		var i = 1;
 		var rows = ps.map(function(p){
-			var last = p.ratings[p.ratings.length-1];
-			var diff = Math.round(last - p.ratings[p.ratings.length-2]);
+			var last = p.ratings[0];
+			var diff = Math.round(last - p.ratings[1]);
 			if (active)
 				return [
 					i++,
