@@ -88,12 +88,10 @@ function string_of_result(result)
 
 function refresh_games_table(div, x)
 {
-	games.sort(function(a, b){return -compare(a.date, b.date)});
-
 	var filtered_games = games.filter(function(g){
 		return x == "" || g.name1 == x || g.name2 == x});
 
-	var rows = filtered_games.map(function(p){
+	var rows = filtered_games.reverse().map(function(p){
 		return [
 			p.date,
 			p.name1,
