@@ -198,28 +198,31 @@ let active_nicks players =
 	List.sort compare nicks
 
 let strings_of_stats players stats =
-	let print ((nick1, nick2), (count, balance)) =
+	let print ((nick1, nick2), (count, balance, wins, draws, losses)) =
 		let player1 = List.assoc nick1 players in
 		let player2 = List.assoc nick2 players in
-		Printf.sprintf "%20s - %-20s    %2d  %3d" player1.name player2.name count balance
+		Printf.sprintf "%20s - %-20s    %2d %2d %2d %2d %3d" player1.name player2.name count wins draws losses balance
 	in
 	List.map print stats
 
-let json_of_stat name1 name2 count balance =
+let json_of_stat name1 name2 count balance wins draws losses =
 	let open Json in
 	Object [
 		"name1", String name1;
 		"name2", String name2;
 		"count", Number (float_of_int count);
 		"balance", Number (float_of_int balance);
+		"wins", Number (float_of_int wins);
+		"draws", Number (float_of_int draws);
+		"losses", Number (float_of_int losses);
 	]
 
 let json_of_stats players stats =
 	Json.Array (
-		List.map (fun ((nick1, nick2), (count, balance)) ->
+		List.map (fun ((nick1, nick2), (count, balance, wins, draws, losses)) ->
 			let player1 = List.assoc nick1 players in
 			let player2 = List.assoc nick2 players in
-			json_of_stat player1.name player2.name count balance
+			json_of_stat player1.name player2.name count balance wins draws losses
 		) stats
 	)
 
@@ -238,15 +241,25 @@ let combine l =
 
 let stats nicks games =
 	let combinations = combine nicks in
-	let combinations = List.map (function [x; y] -> (x, y), (0, 0) | _ -> failwith "boom!") combinations in
-	let results = List.fold_left (fun r (_, nick1, nick2, _) ->
-		let pair, colour = if compare nick1 nick2 < 0 then (nick1, nick2), 1 else (nick2, nick1), -1 in
+	let combinations = List.map (function [x; y] -> (x, y), (0, 0, 0, 0, 0) | _ -> failwith "boom!") combinations in
+	let results = List.fold_left (fun r (_, nick1, nick2, result) ->
+		let pair, colour, result =
+			if compare nick1 nick2 < 0 then
+				(nick1, nick2), 1, result
+			else
+				(nick2, nick1), -1, 1. -. result
+		in
+		let win, draw, loss = match result with
+			| 1. -> 1, 0, 0
+			| 0. -> 0, 0, 1
+			| _  -> 0, 1, 0
+		in
 		try
-			let count, balance = List.assoc pair r in
-			replace pair (count + 1, balance + colour) r
+			let count, balance, wins, draws, losses = List.assoc pair r in
+			replace pair (count + 1, balance + colour, wins + win, draws + draw, losses + loss) r
 		with Not_found -> r
 	) combinations games in
-	List.sort (fun (_, (x, _)) (_, (y, _)) -> x - y) results
+	List.sort (fun (_, (x, _, _, _, _)) (_, (y, _, _, _, _)) -> x - y) results
 
 let strings_of_matches players matches =
 	let print (nick1, nick2) =
@@ -280,8 +293,8 @@ let remove_first x l =
 	loop [] l
 
 let suggested_matches nicks stats =
-	let count_limit = match stats with [] -> 0 | (_, (c, _)) :: _ -> c + 1 in
-	let _, matches = List.fold_left (fun (remaining_nicks, matches) ((nick1, nick2), (count, balance)) ->
+	let count_limit = match stats with [] -> 0 | (_, (c, _, _, _, _)) :: _ -> c + 1 in
+	let _, matches = List.fold_left (fun (remaining_nicks, matches) ((nick1, nick2), (count, balance, _, _, _)) ->
 		if List.mem nick1 remaining_nicks && List.mem nick2 remaining_nicks && count <= count_limit then
 			remaining_nicks |> remove_first nick1 |> remove_first nick2,
 			if balance < 0 then (nick1, nick2) :: matches else (nick2, nick1) :: matches
