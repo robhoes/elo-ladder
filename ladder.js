@@ -161,22 +161,41 @@ function build_suggestions()
 
 function refresh_stats_table(div, x)
 {
-	var filtered_stats = stats.filter(function(g){
-		return x == "" || g.name1 == x || g.name2 == x});
+	var filtered_stats = stats.filter(function(s){
+		return x == "" || s.name1 == x || s.name2 == x});
 
 	var rows = filtered_stats.map(function(p){
-		return [
-			p.name1,
-			p.name2,
-			p.count,
-			p.balance
-		]}
-	);
+		if (p.name2 == x)
+			return [
+				p.name2,
+				p.name1,
+				p.count,
+				p.losses,
+				p.draws,
+				p.wins,
+				-p.balance
+			]
+		else
+			return [
+				p.name1,
+				p.name2,
+				p.count,
+				p.wins,
+				p.draws,
+				p.losses,
+				p.balance
+			]
+	});
 
-	var table = make_table(rows, ["Player 1", "Player 2", "# Games", "Colour Balance"]);
-	if (div.hasChildNodes())
+	var table = make_table(rows, ["Player 1", "Player 2", "Games", "Wins*", "Draws*", "Losses*", "Colour Balance**"]);
+	if (div.hasChildNodes()) {
 		div.removeChild(div.firstChild);
+		div.removeChild(div.firstChild);
+	}
 	div.appendChild(table);
+
+	div.innerHTML += "<p>* For Player 1.<br />\
+		** The number of games Player 1 had white minus the number of games Player 2 had white.</p>";
 }
 
 function build_stats()
