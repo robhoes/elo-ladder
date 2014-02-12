@@ -41,6 +41,9 @@ let replace n p l =
 
 let (|>) x f = f x
 
+let round_to_int x =
+	int_of_float (x +. 0.5)
+
 let json_of_player p =
 	let open Json in
 	Object [
@@ -62,7 +65,7 @@ let strings_of_ladder players =
 	|> List.mapi (fun rank (_, p) ->
 		Printf.sprintf "%2d.  %-30s  %-1s  %4d  (%g / %d)" (succ rank) p.name
 		(if not p.active then "☠" else "")
-			(int_of_float p.rating) p.points_won p.game_count;
+			(round_to_int p.rating) p.points_won p.game_count;
 	)
 
 let play' p1 p2 result date =
@@ -171,7 +174,7 @@ let gnuplot_strings_of_history players =
 		"plot \\" ::
 		List.map (fun (_, p) ->
 			sprintf "'-' using 1:2 with linespoints lc %d lw 2 pi -1 pt %d ps 1.2 title '%4d  %s', \\"
-				p.id p.id (int_of_float p.rating) p.name
+				p.id p.id (round_to_int p.rating) p.name
 		) players
 	in
 	(* Data *)
