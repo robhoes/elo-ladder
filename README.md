@@ -39,13 +39,14 @@ FILE-FORMATS
        The PLAYERS file should be in CSV format:
 
        Syntax:
-           <ID>,<Full name>,<Elo-rating>
+           <ID>,<Full name>,<Elo-rating>,<active>
 
-       Where ID can be any unique string and Elo-rating is the starting
-       rating for the player as an integer.
+       Where ID can be any unique string, Elo-rating is the starting
+       rating for the player as an integer, and active indicates
+       whether the player is retired or not.
 
        Example:
-           magnus,Magnus Carlsen,2870
+           magnus,Magnus Carlsen,2870,true
 
        
        The GAMES file should be in CSV format:
