@@ -6,6 +6,11 @@ function compare(a, b)
 	return 0;
 }
 
+function bold(s)
+{
+	return '<strong>' + s + '</strong>';
+}
+
 function make_table(rows, header)
 {
 	var table = document.createElement('table');
@@ -162,8 +167,14 @@ function refresh_stats_table(div, x)
 	var filtered_stats = stats.filter(function(s){
 		return x == "" || s.name1 == x || s.name2 == x});
 
+	var count = 0, wins = 0, draws = 0, losses = 0, balance = 0;
 	var rows = filtered_stats.map(function(p){
-		if (p.name2 == x)
+		count += p.count;
+		draws += p.draws;
+		if (p.name2 == x) {
+			wins += p.losses;
+			losses += p.wins;
+			balance -= p.balance;
 			return [
 				p.name2,
 				p.name1,
@@ -173,7 +184,11 @@ function refresh_stats_table(div, x)
 				p.wins,
 				-p.balance
 			]
-		else
+		}
+		else {
+			wins += p.wins;
+			losses += p.losses;
+			balance += p.balance;
 			return [
 				p.name1,
 				p.name2,
@@ -183,7 +198,9 @@ function refresh_stats_table(div, x)
 				p.losses,
 				p.balance
 			]
+		}
 	});
+	rows.push(["", "", bold(count), bold(wins), bold(draws), bold(losses), bold(balance)]);
 
 	var table = make_table(rows, ["Player 1", "Player 2", "Games", "Wins*", "Draws*", "Losses*", "Colour Balance**"]);
 	if (div.hasChildNodes()) {
