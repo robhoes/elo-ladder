@@ -244,6 +244,7 @@ let combine l =
 	aux 2 [] emit l
 
 let stats nicks games =
+	let nicks = List.sort compare nicks in
 	let combinations = combine nicks in
 	let combinations = List.map (function [x; y] -> (x, y), (0, 0, 0, 0, 0) | _ -> failwith "boom!") combinations in
 	let results = List.fold_left (fun r (_, nick1, nick2, result) ->
@@ -279,7 +280,7 @@ let json_of_pair name1 name2 =
 		"name1", String name1;
 		"name2", String name2;
 	]
-	
+
 let json_of_matches players matches =
 	Json.Array (
 		List.map (fun (nick1, nick2) ->
@@ -409,7 +410,7 @@ let print_history players_path games_path fmt =
 let print_stats players_path games_path =
 	let players = read_players players_path in
 	let games = read_games games_path in
-	let nicks = active_nicks players in
+	let nicks = List.map (fun (nick, _) -> nick) players in
 	print_endline (string_of_heading ~gh_pages:false "Statistics");
 	print_endline (string_of_section (stats nicks games |> strings_of_stats players));
 	()
@@ -417,20 +418,21 @@ let print_stats players_path games_path =
 let print_json players_path games_path =
 	let players = read_players players_path in
 	let games = read_games games_path in
-	
+
 	let players = play_games players games in
 	let json = "players = " ^ (Json.to_string (json_of_players players)) in
 	print_endline (json);
-	
+
 	let json = "games = " ^ (Json.to_string (json_of_games players games)) in
 	print_endline (json);
-	
-	let nicks = active_nicks players in
+
+	let nicks = List.map (fun (nick, _) -> nick) players in
+	let active_nicks = active_nicks players in
 	let stats = stats nicks games in
 	let json = "stats = " ^ (Json.to_string (json_of_stats players stats)) in
 	print_endline (json);
 
-	let suggestions = stats |> suggested_matches nicks in
+	let suggestions = stats |> suggested_matches active_nicks in
 	let json = "suggestions = " ^ (Json.to_string (json_of_matches players suggestions)) in
 	print_endline (json);
 	()
