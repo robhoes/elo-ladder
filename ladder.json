@@ -598,6 +598,15 @@ stats = [ { "name1": "Si Beaumont",
 "draws": 0.0000,
 "losses": 5.0000 } ]
 suggestions = [ { "name1": "Thomas Sanders",
-"name2": "Si Beaumont" }, { "name1": "Marcus Granado",
-"name2": "John Else" }, { "name1": "Felipe Franciosi",
-"name2": "Andrew Bennieston" } ]
+"name2": "Si Beaumont",
+"stake_win": 15.4073,
+"stake_draw": -0.5927,
+"stake_loss": -16.5927 }, { "name1": "Marcus Granado",
+"name2": "John Else",
+"stake_win": 17.6472,
+"stake_draw": 1.6472,
+"stake_loss": -14.3528 }, { "name1": "Felipe Franciosi",
+"name2": "Andrew Bennieston",
+"stake_win": 6.6036,
+"stake_draw": -9.3964,
+"stake_loss": -25.3964 } ]

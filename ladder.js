@@ -11,6 +11,24 @@ function bold(s)
 	return '<strong>' + s + '</strong>';
 }
 
+function motion(diff)
+{
+	var c, m;
+	if (diff > 0) {
+		c = "up";
+		m = "+";
+	}
+	else if (diff == 0) {
+		c = "equal";
+		m = "=";
+	}
+	else {
+		c = "down";
+		m = "";
+	}
+	return '<span class="' + c + '">' + m + diff + '</span>';
+}
+
 function make_table(rows, header)
 {
 	var table = document.createElement('table');
@@ -58,7 +76,7 @@ function build_ladder()
 					i++,
 					p.name,
 					Math.round(last),
-					'<span class=' + (diff > 0 ? '"up">+' : '"down">') + diff + '</span>',
+					motion(diff),
 					p.points_won + " / " + p.game_count
 				]
 			else
@@ -146,6 +164,14 @@ function build_games()
 	refresh_games_table(games_table, "");
 }
 
+function display_stakes(a, b, c)
+{
+	var s = '<span class="stakes">';
+	s += motion(Math.round(a)) + ' / ' + motion(Math.round(b)) + ' / ' + motion(Math.round(c));
+	s += '</span>';
+	return s;
+}
+
 function build_suggestions()
 {
 	var div = document.getElementById("results");
@@ -153,8 +179,10 @@ function build_suggestions()
 
 	var rows = suggestions.map(function(p){
 		return [
-			p.name1,
-			p.name2
+			p.name1 +
+			display_stakes(p.stake_win, p.stake_draw, p.stake_loss),
+			p.name2 +
+			display_stakes(-p.stake_loss, -p.stake_draw, -p.stake_win),
 		]}
 	);
 

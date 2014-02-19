@@ -275,3 +275,13 @@ footer {
 .down {
   color:red;
 }
+
+.equal {
+}
+
+.stakes {
+  margin-left:2em;
+  margin-right:1em;
+  font-size:90%;
+  vertical-align:middle;
+}
