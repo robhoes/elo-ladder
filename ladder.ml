@@ -274,19 +274,22 @@ let strings_of_matches players matches =
 	in
 	List.map print matches
 
-let json_of_pair name1 name2 =
+let json_of_match name1 name2 stake_win stake_draw stake_loss =
 	let open Json in
 	Object [
 		"name1", String name1;
 		"name2", String name2;
+		"stake_win", Number stake_win;
+		"stake_draw", Number stake_draw;
+		"stake_loss", Number stake_loss;
 	]
 
 let json_of_matches players matches =
 	Json.Array (
-		List.map (fun (nick1, nick2) ->
+		List.map (fun ((nick1, nick2), (stake_win, stake_draw, stake_loss)) ->
 			let player1 = List.assoc nick1 players in
 			let player2 = List.assoc nick2 players in
-			json_of_pair player1.name player2.name
+			json_of_match player1.name player2.name stake_win stake_draw stake_loss
 		) matches
 	)
 
@@ -296,6 +299,12 @@ let remove_first x l =
 	| hd :: tl -> if hd = x then ac @ tl else loop (hd :: ac) tl
 	in
 	loop [] l
+
+let get_stakes players (nick1, nick2) =
+	let player1 = List.assoc nick1 players in
+	let player2 = List.assoc nick2 players in
+	let update result = k *. (result -. get_expectation player1.rating player2.rating) in
+	update 1., update 0.5, update 0.
 
 let suggested_matches nicks stats =
 	let count_limit = match stats with [] -> 0 | (_, (c, _, _, _, _)) :: _ -> c + 1 in
@@ -433,6 +442,7 @@ let print_json players_path games_path =
 	print_endline (json);
 
 	let suggestions = stats |> suggested_matches active_nicks in
+	let suggestions = List.map (fun game -> game, get_stakes players game) suggestions in
 	let json = "suggestions = " ^ (Json.to_string (json_of_matches players suggestions)) in
 	print_endline (json);
 	()
