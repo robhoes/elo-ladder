@@ -190,6 +190,11 @@ function build_suggestions()
 	div.appendChild(table);
 }
 
+function average_result(wins, draws, losses, count)
+{
+	return (count == 0) ? "-" : motion(((wins + 0.5*draws - losses) / count).toFixed(2));
+}
+
 function refresh_stats_table(div, x)
 {
 	var filtered_stats = stats.filter(function(s){
@@ -210,6 +215,7 @@ function refresh_stats_table(div, x)
 				p.losses,
 				p.draws,
 				p.wins,
+				average_result(-p.wins, -p.draws, -p.losses, p.count),
 				-p.balance
 			]
 		}
@@ -224,13 +230,15 @@ function refresh_stats_table(div, x)
 				p.wins,
 				p.draws,
 				p.losses,
+				average_result(p.wins, p.draws, p.losses, p.count),
 				p.balance
 			]
 		}
 	});
-	rows.push(["", "", bold(count), bold(wins), bold(draws), bold(losses), bold(balance)]);
+	var avg = average_result(wins, draws, losses, count);
+	rows.push(["", "", bold(count), bold(wins), bold(draws), bold(losses), bold(avg), bold(balance)]);
 
-	var table = make_table(rows, ["Player 1", "Player 2", "Games", "Wins*", "Draws*", "Losses*", "Colour Balance**"]);
+	var table = make_table(rows, ["Player 1", "Player 2", "Games", "Wins*", "Draws*", "Losses*", "Average Result*", "Colour Balance**"]);
 	if (div.hasChildNodes()) {
 		div.removeChild(div.firstChild);
 		div.removeChild(div.firstChild);
