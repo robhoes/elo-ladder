@@ -19,7 +19,7 @@ let get_updates rating1 rating2 result =
 (* ladder *)
 
 module Date = struct
-	type t = { y : int; m : int; d : int }
+	type t = { id: int; y : int; m : int; d : int }
 	let compare t t' = compare (t.y, t.m, t.d) (t'.y, t'.m, t'.d)
 	let string_of t = Printf.sprintf "%04d-%02d-%02d" t.y t.m t.d
 end
@@ -145,10 +145,8 @@ let gnuplot_strings_of_history players =
 	let preamble = [
 		"set term pngcairo size 1920,1080 linewidth 1.75 enhanced font \"Droid Sans,18\"";
 		"set title 'XenServer Chess Ladder' font \"Droid Sans,34\"";
-		"set xdata time";
+		"set xtics format''";
 		"set key rmargin bottom reverse Left";
-		"set timefmt '%Y-%m-%d'";
-		"set format x '%d/%m'";
 		"set datafile separator '\\t'";
 		"# Border";
 		"set style line 200 lc rgb '#000000' lt 1 lw 1";
@@ -166,8 +164,8 @@ let gnuplot_strings_of_history players =
 	let dotted_tails =
 		List.map (fun (_, p) ->
 			let (latest_d, latest_r) = List.hd p.history in
-			sprintf "set arrow from first \"%s\", first %.1f to graph 1, first %.1f nohead lc %d lw 3 lt 0"
-				(Date.string_of latest_d) latest_r latest_r p.id
+			sprintf "set arrow from first \"%d\", first %.1f to graph 1, first %.1f nohead lc %d lw 3 lt 0"
+				(latest_d.Date.id) latest_r latest_r p.id
 		) (List.filter (fun (_, p) -> p.active) players)
 	in
 	let plot_cmds =
@@ -180,7 +178,7 @@ let gnuplot_strings_of_history players =
 	(* Data *)
 	List.map (fun (_, p) ->
 		List.fold_left (fun acc (d, r) ->
-			(sprintf "%s\t%.1f" (Date.string_of d) r) :: acc
+			(sprintf "%d\t%.1f" (d.Date.id) r) :: acc
 		) [] p.history
 	) players
 	|> List.map (fun l -> l @ ["end"]) |> List.flatten
@@ -348,9 +346,11 @@ let read_players path =
 
 
 let read_games path =
+	let id = ref 0 in
 	let parse_game_line line =
+		id := succ !id;
 		Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%f"
-			(fun yyyy mm dd nick_w nick_b res -> Date.({y=yyyy; m=mm; d=dd}), nick_w, nick_b, res
+			(fun yyyy mm dd nick_w nick_b res -> Date.({id=(!id); y=yyyy; m=mm; d=dd}), nick_w, nick_b, res
 		)
 	in
 	let in_channel = open_in path in
