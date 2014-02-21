@@ -469,9 +469,10 @@ let help_secs = [
 	`S "FILE-FORMATS";
 		`P "The $(i,PLAYERS) file should be in CSV format:";
 		`I ("Syntax:", "<$(i,ID)>,<Full name>,<$(i,Elo-rating)>");
-		`P "Where $(i,ID) can be any unique string and $(i,Elo-rating) is
-		    the starting rating for the player as an integer.";
-		`I ("Example:", "magnus,Magnus Carlsen,2870");
+		`P "Where $(i,ID) can be any unique string, $(i,Elo-rating) is the
+		    starting rating for the player as an integer, and active indicates
+		    whether the player is retired or not.";
+		`I ("Example:", "magnus,Magnus Carlsen,2870,true");
 		`P ""; `Noblank;
 		`P "The $(i,GAMES) file should be in CSV format:";
 		`I ("Syntax:", "<Date>,<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
