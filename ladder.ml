@@ -145,10 +145,8 @@ let gnuplot_strings_of_history players =
 	let preamble = [
 		"set term pngcairo size 1920,1080 linewidth 1.75 enhanced font \"Droid Sans,18\"";
 		"set title 'XenServer Chess Ladder' font \"Droid Sans,34\"";
-		"set xdata time";
+		"set xtics format''";
 		"set key rmargin bottom reverse Left";
-		"set timefmt '%Y-%m-%d'";
-		"set format x '%d/%m'";
 		"set datafile separator '\\t'";
 		"# Border";
 		"set style line 200 lc rgb '#000000' lt 1 lw 1";
@@ -166,8 +164,8 @@ let gnuplot_strings_of_history players =
 	let dotted_tails =
 		List.map (fun (_, p) ->
 			let (latest_d, latest_r) = List.hd p.history in
-			sprintf "set arrow from first \"%s\", first %.1f to graph 1, first %.1f nohead lc %d lw 3 lt 0"
-				(Date.string_of latest_d) latest_r latest_r p.id
+			sprintf "set arrow from first \"%d\", first %.1f to graph 1, first %.1f nohead lc %d lw 3 lt 0"
+				(latest_d.Date.id) latest_r latest_r p.id
 		) (List.filter (fun (_, p) -> p.active) players)
 	in
 	let plot_cmds =
@@ -180,7 +178,7 @@ let gnuplot_strings_of_history players =
 	(* Data *)
 	List.map (fun (_, p) ->
 		List.fold_left (fun acc (d, r) ->
-			(sprintf "%s\t%.1f" (Date.string_of d) r) :: acc
+			(sprintf "%d\t%.1f" (d.Date.id) r) :: acc
 		) [] p.history
 	) players
 	|> List.map (fun l -> l @ ["end"]) |> List.flatten
