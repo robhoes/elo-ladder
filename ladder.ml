@@ -19,7 +19,7 @@ let get_updates rating1 rating2 result =
 (* ladder *)
 
 module Date = struct
-	type t = { y : int; m : int; d : int }
+	type t = { id: int; y : int; m : int; d : int }
 	let compare t t' = compare (t.y, t.m, t.d) (t'.y, t'.m, t'.d)
 	let string_of t = Printf.sprintf "%04d-%02d-%02d" t.y t.m t.d
 end
@@ -348,9 +348,11 @@ let read_players path =
 
 
 let read_games path =
+	let id = ref 0 in
 	let parse_game_line line =
+		id := succ !id;
 		Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%f"
-			(fun yyyy mm dd nick_w nick_b res -> Date.({y=yyyy; m=mm; d=dd}), nick_w, nick_b, res
+			(fun yyyy mm dd nick_w nick_b res -> Date.({id=(!id); y=yyyy; m=mm; d=dd}), nick_w, nick_b, res
 		)
 	in
 	let in_channel = open_in path in
