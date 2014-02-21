@@ -171,8 +171,8 @@ let gnuplot_strings_of_history players =
 	let plot_cmds =
 		"plot \\" ::
 		List.map (fun (_, p) ->
-			sprintf "'-' using 1:2 with linespoints lc %d lw 2 pi -1 pt %d ps 1.2 title '%4d  %s', \\"
-				p.id p.id (round_to_int p.rating) p.name
+			sprintf "'-' using 1:2 with linespoints lc %d lw 2 pi -1 pt %d ps 1.2 title '%4d  %s %s', \\"
+				p.id p.id (round_to_int p.rating) p.name (if not p.active then "☠" else "")
 		) players
 	in
 	(* Data *)
