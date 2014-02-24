@@ -54,6 +54,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   cd gh-pages
   cp -f $HOME/index.md .
   cp -f $HOME/ladder.png .
+  cp -f $HOME/ladder.json .
 
   #add, commit and push files
   git add index.md
