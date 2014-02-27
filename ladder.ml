@@ -179,7 +179,7 @@ let gnuplot_strings_of_history players =
 	List.map (fun (_, p) ->
 		List.fold_left (fun acc (d, r) ->
 			(sprintf "%d\t%.1f" (d.Date.id) r) :: acc
-		) [] p.history
+		) [] (p.history |> List.rev |> List.tl |> List.rev) (* remove the last list element, which is the initial rating of 1500 *)
 	) players
 	|> List.map (fun l -> l @ ["end"]) |> List.flatten
 	|> List.append (preamble @ dotted_tails @ plot_cmds @ ["1 / 0 notitle"])
