@@ -140,7 +140,7 @@ let csv_strings_of_history players =
 	headings :: (List.rev lines)
 
 let gnuplot_strings_of_history players =
-	let players = sort_by_rating players in
+	let players = sort_by_rating players |> List.filter (fun (_, p) -> List.length p.history > 1) in
 	let open Printf in
 	let preamble = [
 		"set term pngcairo size 1920,1080 linewidth 1.75 enhanced font \"Droid Sans,18\"";
