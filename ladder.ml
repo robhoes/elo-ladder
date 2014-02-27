@@ -323,10 +323,11 @@ let line_stream_of_channel channel =
 	)
 
 let read_players path =
+	let long_time_ago = Date.({id = 0; y = 1970; m = 1; d = 1}) in
 	let parse_player_line id line =
 		Scanf.sscanf line "%s@,%s@,%f,%b"
 			(fun nick name rating active ->
-				nick, {name; rating; history = []; game_count = 0; points_won = 0.; active; id})
+				nick, {name; rating; history = [long_time_ago, rating]; game_count = 0; points_won = 0.; active; id})
 	in
 	let in_channel = open_in path in
 	let players = ref [] in
