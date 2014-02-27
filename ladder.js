@@ -70,7 +70,9 @@ function build_ladder()
 		var i = 1;
 		var rows = ps.map(function(p){
 			var last = p.ratings[0];
-			var diff = Math.round(last - p.ratings[1]);
+			var diff = 0;
+			if (p.ratings.length > 1)
+				diff = Math.round(last - p.ratings[1]);
 			if (active)
 				return [
 					i++,
