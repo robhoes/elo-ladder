@@ -1,4 +1,4 @@
-# Elo-ladder [![Build Status](https://travis-ci.org/simonjbeaumont/ocaml-pci-db.png)](https://travis-ci.org/robhoes/elo-ladder)
+# Elo-ladder [![Build Status](https://travis-ci.org/robhoes/elo-ladder.png)](https://travis-ci.org/robhoes/elo-ladder)
 
 _An Elo-rating based ladder competition manager_
 
