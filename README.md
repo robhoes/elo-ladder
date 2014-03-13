@@ -6,7 +6,7 @@ The algorithm is as described on http://en.wikipedia.org/wiki/ELO_rating_system.
 
 ## Getting involved
 The results of the ladder are automatically published at
-http://simonjbeaumont.com/elo-ladder.
+http://robhoes.github.io/elo-ladder.
 
 Here you can also find instructions on adding yourself to the ladder and
 recording games that you have played.
