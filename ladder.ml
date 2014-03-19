@@ -298,6 +298,13 @@ let remove_first x l =
 	in
 	loop [] l
 
+let filter_map f l =
+	List.fold_left (fun l' a -> match f a with Some x -> x :: l' | None -> l') [] l |> List.rev
+
+let rec setify = function
+	| [] -> []
+	| (x :: xs) -> if List.mem x xs then setify xs else x :: (setify xs)
+
 let get_stakes players (nick1, nick2) =
 	let player1 = List.assoc nick1 players in
 	let player2 = List.assoc nick2 players in
@@ -314,6 +321,22 @@ let suggested_matches nicks stats =
 			remaining_nicks, matches
 	) (nicks, []) stats in
 	List.rev matches
+
+let suggested_matches2 players nicks stats =
+	filter_map (fun nick ->
+		let stats' = List.filter (fun ((nick1, nick2), _) -> nick1 = nick || nick2 = nick) stats in
+		let count_limit = match stats' with [] -> 0 | (_, (c, _, _, _, _)) :: _ -> c + 1 in
+		let scores_and_games = filter_map (fun ((nick1, nick2), (count, balance, _, _, _)) ->
+			if count <= count_limit then
+				let rating n = (List.assoc n players).rating in
+				let score = (rating nick1 -. rating nick2) |> int_of_float |> abs in
+				Some (score, (if balance < 0 then (nick1, nick2) else (nick2, nick1)))
+			else
+				None
+		) stats' in
+		List.fold_left (function None -> (function x -> Some x) | Some (min_score, game) -> (function (score, game') -> Some (if score < min_score then score, game' else min_score, game))
+		) None scores_and_games
+	) nicks |> List.map snd |> setify
 
 (* filing *)
 
@@ -396,12 +419,14 @@ let print_summary title players_path games_path rev_chron gh_pages =
 	| None -> ()
 	end;
 
+	let players = play_games players games in
+
 	print_endline (string_of_heading ~gh_pages "Ladder");
-	print_endline (string_of_section (strings_of_ladder (play_games players games)));
+	print_endline (string_of_section (strings_of_ladder players));
 
 	let nicks = active_nicks players in
 	print_endline (string_of_heading ~gh_pages "Suggested games (least played)");
-	print_endline (string_of_section (stats nicks games |> suggested_matches nicks |>
+	print_endline (string_of_section (stats nicks games |> suggested_matches2 players nicks |>
 		strings_of_matches players));
 
 	print_endline (string_of_heading ~gh_pages "Games");
