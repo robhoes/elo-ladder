@@ -467,7 +467,7 @@ let print_json players_path games_path =
 	let json = "stats = " ^ (Json.to_string (json_of_stats players stats)) in
 	print_endline (json);
 
-	let suggestions = stats |> suggested_matches active_nicks in
+	let suggestions = stats |> suggested_matches2 players active_nicks in
 	let suggestions = List.map (fun game -> game, get_stakes players game) suggestions in
 	let json = "suggestions = " ^ (Json.to_string (json_of_matches players suggestions)) in
 	print_endline (json);
