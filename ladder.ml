@@ -324,17 +324,24 @@ let suggested_matches nicks stats =
 
 let suggested_matches2 players nicks stats =
 	filter_map (fun nick ->
+		(* take the three least-played games for "nick" *)
 		let stats' = List.filter (fun ((nick1, nick2), _) -> nick1 = nick || nick2 = nick) stats in
-		let count_limit = match stats' with [] -> 0 | (_, (c, _, _, _, _)) :: _ -> c + 1 in
-		let scores_and_games = filter_map (fun ((nick1, nick2), (count, balance, _, _, _)) ->
-			if count <= count_limit then
-				let rating n = (List.assoc n players).rating in
-				let score = (rating nick1 -. rating nick2) |> int_of_float |> abs in
-				Some (score, (if balance < 0 then (nick1, nick2) else (nick2, nick1)))
-			else
-				None
+		let stats' = match stats' with
+			| stat1 :: stat2 :: stat3 :: _ -> [stat1; stat2; stat3]
+			| _ -> []
+		in
+		(* of these, pick the opponent that is closest in rating *)
+		let scores_and_games = List.map (fun ((nick1, nick2), (count, balance, _, _, _)) ->
+			let rating n = (List.assoc n players).rating in
+			let score = (rating nick1 -. rating nick2) |> int_of_float |> abs in
+			(* assign colour fairly *)
+			(score, (if balance < 0 then (nick1, nick2) else (nick2, nick1)))
 		) stats' in
-		List.fold_left (function None -> (function x -> Some x) | Some (min_score, game) -> (function (score, game') -> Some (if score < min_score then score, game' else min_score, game))
+		List.fold_left (function
+			| None ->
+				(function x -> Some x)
+			| Some (min_score, game) ->
+				(function (score, game') -> Some (if score < min_score then score, game' else min_score, game))
 		) None scores_and_games
 	) nicks |> List.map snd |> setify
 
