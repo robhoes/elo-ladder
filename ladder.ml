@@ -463,11 +463,11 @@ let print_json players_path games_path =
 
 	let nicks = List.map (fun (nick, _) -> nick) players in
 	let active_nicks = active_nicks players in
-	let stats = stats nicks games in
-	let json = "stats = " ^ (Json.to_string (json_of_stats players stats)) in
+	let stats' = stats nicks games in
+	let json = "stats = " ^ (Json.to_string (json_of_stats players stats')) in
 	print_endline (json);
 
-	let suggestions = stats |> suggested_matches2 players active_nicks in
+	let suggestions = stats active_nicks games |> suggested_matches2 players active_nicks in
 	let suggestions = List.map (fun game -> game, get_stakes players game) suggestions in
 	let json = "suggestions = " ^ (Json.to_string (json_of_matches players suggestions)) in
 	print_endline (json);
