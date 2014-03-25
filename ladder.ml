@@ -322,6 +322,14 @@ let suggested_matches nicks stats =
 	) (nicks, []) stats in
 	List.rev matches
 
+let min_score =
+	List.fold_left (function
+		| None ->
+			(function x -> Some x)
+		| Some (x, y) ->
+			(function (x', y') -> Some (if y' < y then x', y' else x, y))
+	) None
+
 let suggested_matches2 players nicks stats =
 	filter_map (fun nick ->
 		(* take the three least-played games for "nick" *)
@@ -331,19 +339,45 @@ let suggested_matches2 players nicks stats =
 			| _ -> []
 		in
 		(* of these, pick the opponent that is closest in rating *)
-		let scores_and_games = List.map (fun ((nick1, nick2), (count, balance, _, _, _)) ->
+		let games_and_scores = List.map (fun ((nick1, nick2), (count, balance, _, _, _)) ->
 			let rating n = (List.assoc n players).rating in
 			let score = (rating nick1 -. rating nick2) |> int_of_float |> abs in
 			(* assign colour fairly *)
-			(score, (if balance < 0 then (nick1, nick2) else (nick2, nick1)))
+			(if balance < 0 then (nick1, nick2) else (nick2, nick1)), score
 		) stats' in
-		List.fold_left (function
-			| None ->
-				(function x -> Some x)
-			| Some (min_score, game) ->
-				(function (score, game') -> Some (if score < min_score then score, game' else min_score, game))
-		) None scores_and_games
-	) nicks |> List.map snd |> setify
+		min_score games_and_scores
+	) nicks |> List.map fst |> setify
+
+let suggested_matches3 players nicks stats =
+	let counts = ref (List.map (fun nick -> nick, 0) nicks) in
+	filter_map (fun nick ->
+		(* take the three least-played games for "nick" *)
+		let stats' = List.filter (fun ((nick1, nick2), _) -> nick1 = nick || nick2 = nick) stats in
+		let stats' = match stats' with
+			| stat1 :: stat2 :: stat3 :: _ -> [stat1; stat2; stat3]
+			| _ -> []
+		in
+		(* pick the opponents that has been chosen the least often *)
+		let games_and_scores = List.map (fun ((nick1, nick2), (count, balance, _, _, _)) ->
+			let score =
+				let other = if nick1 <> nick then nick1 else nick2 in
+				List.assoc other !counts
+			in
+			(* assign colour fairly *)
+			(if balance < 0 then (nick1, nick2) else (nick2, nick1)), score
+		) stats' in
+		let result = min_score games_and_scores in
+		(* update counts *)
+		(match result with
+			| Some ((nick1, nick2), _) ->
+				let new_count = List.assoc nick1 !counts + 1 in
+				counts := replace nick1 new_count !counts;
+				let new_count = List.assoc nick2 !counts + 1 in
+				counts := replace nick2 new_count !counts
+			| None -> ()
+		);
+		result
+	) nicks |> List.map fst |> setify
 
 (* filing *)
 
@@ -433,7 +467,7 @@ let print_summary title players_path games_path rev_chron gh_pages =
 
 	let nicks = active_nicks players in
 	print_endline (string_of_heading ~gh_pages "Suggested games (least played)");
-	print_endline (string_of_section (stats nicks games |> suggested_matches2 players nicks |>
+	print_endline (string_of_section (stats nicks games |> suggested_matches3 players nicks |>
 		strings_of_matches players));
 
 	print_endline (string_of_heading ~gh_pages "Games");
@@ -474,7 +508,7 @@ let print_json players_path games_path =
 	let json = "stats = " ^ (Json.to_string (json_of_stats players stats')) in
 	print_endline (json);
 
-	let suggestions = stats active_nicks games |> suggested_matches2 players active_nicks in
+	let suggestions = stats active_nicks games |> suggested_matches3 players active_nicks in
 	let suggestions = List.map (fun game -> game, get_stakes players game) suggestions in
 	let json = "suggestions = " ^ (Json.to_string (json_of_matches players suggestions)) in
 	print_endline (json);
