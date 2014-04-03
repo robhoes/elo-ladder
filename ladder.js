@@ -194,7 +194,7 @@ function build_suggestions()
 
 function average_result(wins, draws, losses, count)
 {
-	return (count == 0) ? "-" : motion(((wins + 0.5*draws - losses) / count).toFixed(2));
+	return (count == 0) ? "-" : motion(((wins - losses) / count).toFixed(2));
 }
 
 function refresh_stats_table(div, x)
