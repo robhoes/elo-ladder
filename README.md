@@ -54,7 +54,7 @@ FILE-FORMATS
        Syntax:
            <Date>,<White's ID>,<Black's ID>,<RES>
 
-       Where the date is in ISO 6801 format (yyyy-mm-dd); IDs match those
+       Where the date is in ISO 8601 format (yyyy-mm-dd); IDs match those
        listed in the PLAYERS file; and RES is either 1, .5 or 0 in the case
        of a win, draw or loss for white respectively.
 

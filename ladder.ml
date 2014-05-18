@@ -543,7 +543,7 @@ let help_secs = [
 		`P ""; `Noblank;
 		`P "The $(i,GAMES) file should be in CSV format:";
 		`I ("Syntax:", "<Date>,<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
-		`P "Where the date is in ISO 6801 format (yyyy-mm-dd); $(i,ID)s
+		`P "Where the date is in ISO 8601 format (yyyy-mm-dd); $(i,ID)s
 		    match those listed in the $(i,PLAYERS) file; and $(i,RES) is
 		    either $(i,1), $(i,.5) or $(i,0) in the case of a win, draw
 		    or loss for white respectively.";
