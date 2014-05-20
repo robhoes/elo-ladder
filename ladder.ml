@@ -1,7 +1,7 @@
 (* Elo rating calculations *)
 
 module type GAMETYPE = sig
-	val get_updates : float -> float -> float -> float * float
+	val get_updates : float -> float -> int -> float -> float * float
 	val get_stakes : float -> float -> float * float * float
 end
 
@@ -16,7 +16,7 @@ module Chess : GAMETYPE = struct
 		let factor2 = get_factor rating2 in
 		factor1 /. (factor1 +. factor2)
 
-	let get_updates rating1 rating2 result =
+	let get_updates rating1 rating2 _ result =
 		let expectation = get_expectation rating1 rating2 in
 		let update = k *. (result -. expectation) in
 		rating1 +. update,
@@ -81,8 +81,8 @@ let strings_of_ladder players =
 			(round_to_int p.rating) p.points_won p.game_count;
 	)
 
-let play' p1 p2 result date =
-	let update1, update2 = G.get_updates p1.rating p2.rating result in
+let play' p1 p2 len result date =
+	let update1, update2 = G.get_updates p1.rating p2.rating len result in
 	{p1 with rating = update1; history = (date, update1) :: p1.history;
 		game_count = p1.game_count + 1; points_won = p1.points_won +. result},
 	{p2 with rating = update2; history = (date, update2) :: p2.history;
@@ -95,7 +95,7 @@ let string_of_result = function
 
 let strings_of_games ~rev_chron players games =
 	let lines =
-		List.map (fun (date, nick1, nick2, result) ->
+		List.map (fun (date, nick1, nick2, len, result) ->
 			let player1 = List.assoc nick1 players in
 			let player2 = List.assoc nick2 players in
 			Printf.sprintf "%s: %20s - %-20s    %s"
@@ -105,7 +105,7 @@ let strings_of_games ~rev_chron players games =
 	in
 	if rev_chron then List.rev lines else lines
 	
-let json_of_game date name1 name2 result =
+let json_of_game date name1 name2 len result =
 	let open Json in
 	Object [
 		"date", String (Date.string_of date);
@@ -116,10 +116,10 @@ let json_of_game date name1 name2 result =
 	
 let json_of_games players games =
 	Json.Array (
-		List.map (fun (date, nick1, nick2, result) ->
+		List.map (fun (date, nick1, nick2, len, result) ->
 			let player1 = List.assoc nick1 players in
 			let player2 = List.assoc nick2 players in
-			json_of_game date player1.name player2.name result
+			json_of_game date player1.name player2.name len result
 		) games
 	)
 
@@ -197,15 +197,15 @@ let gnuplot_strings_of_history players =
 	|> List.map (fun l -> l @ ["end"]) |> List.flatten
 	|> List.append (preamble @ dotted_tails @ plot_cmds @ ["1 / 0 notitle"])
 
-let play players nick1 nick2 result date =
+let play players nick1 nick2 len result date =
 	let player1 = List.assoc nick1 players in
 	let player2 = List.assoc nick2 players in
-	let player1, player2 = play' player1 player2 result date in
+	let player1, player2 = play' player1 player2 len result date in
 	players |> replace nick1 player1 |> replace nick2 player2
 
 let play_games players games =
-	List.fold_left (fun players (date, nick1, nick2, result) ->
-		play players nick1 nick2 result date
+	List.fold_left (fun players (date, nick1, nick2, len, result) ->
+		play players nick1 nick2 len result date
 	) players games
 
 let active_nicks players =
@@ -258,7 +258,7 @@ let stats nicks games =
 	let nicks = List.sort compare nicks in
 	let combinations = combine nicks in
 	let combinations = List.map (function [x; y] -> (x, y), (0, 0, 0, 0, 0) | _ -> failwith "boom!") combinations in
-	let results = List.fold_left (fun r (_, nick1, nick2, result) ->
+	let results = List.fold_left (fun r (_, nick1, nick2, len, result) ->
 		let pair, colour, result =
 			if compare nick1 nick2 < 0 then
 				(nick1, nick2), 1, result
@@ -426,9 +426,15 @@ let read_games path =
 	let id = ref 0 in
 	let parse_game_line line =
 		id := succ !id;
-		Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%f"
-			(fun yyyy mm dd nick_w nick_b res -> Date.({id=(!id); y=yyyy; m=mm; d=dd}), nick_w, nick_b, res
-		)
+		try
+			Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%d,%f"
+				(fun yyyy mm dd nick_w nick_b len res -> Date.({id=(!id); y=yyyy; m=mm; d=dd}), nick_w, nick_b, len, res
+			)
+		with _ ->
+			(* if we don't have a length field, then use 0 *)
+			Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%f"
+				(fun yyyy mm dd nick_w nick_b res -> Date.({id=(!id); y=yyyy; m=mm; d=dd}), nick_w, nick_b, 0, res
+			)
 	in
 	let in_channel = open_in path in
 	let games = ref [] in
