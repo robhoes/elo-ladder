@@ -1,20 +1,28 @@
 (* Elo rating calculations *)
 
-let k = 32.
+module type GAMETYPE = sig
+	val k : float
+	val get_expectation : float -> float -> float
+	val get_updates : float -> float -> float -> float * float
+end
 
-let get_factor rating =
-	10. ** (rating /. 400.)
+module Chess : GAMETYPE = struct
+	let k = 32.
 
-let get_expectation rating1 rating2 =
-	let factor1 = get_factor rating1 in
-	let factor2 = get_factor rating2 in
-	factor1 /. (factor1 +. factor2)
+	let get_factor rating =
+		10. ** (rating /. 400.)
 
-let get_updates rating1 rating2 result =
-	let expectation = get_expectation rating1 rating2 in
-	let update = k *. (result -. expectation) in
-	rating1 +. update,
-	rating2 -. update
+	let get_expectation rating1 rating2 =
+		let factor1 = get_factor rating1 in
+		let factor2 = get_factor rating2 in
+		factor1 /. (factor1 +. factor2)
+
+	let get_updates rating1 rating2 result =
+		let expectation = get_expectation rating1 rating2 in
+		let update = k *. (result -. expectation) in
+		rating1 +. update,
+		rating2 -. update
+end
 
 (* ladder *)
 
@@ -24,6 +32,8 @@ module Date = struct
 	let string_of t = Printf.sprintf "%04d-%02d-%02d" t.y t.m t.d
 end
 module DateMap = Map.Make(Date)
+
+module Ladder (G : GAMETYPE) = struct
 
 type player = {
 	name: string;
@@ -69,7 +79,7 @@ let strings_of_ladder players =
 	)
 
 let play' p1 p2 result date =
-	let update1, update2 = get_updates p1.rating p2.rating result in
+	let update1, update2 = G.get_updates p1.rating p2.rating result in
 	{p1 with rating = update1; history = (date, update1) :: p1.history;
 		game_count = p1.game_count + 1; points_won = p1.points_won +. result},
 	{p2 with rating = update2; history = (date, update2) :: p2.history;
@@ -308,7 +318,7 @@ let rec setify = function
 let get_stakes players (nick1, nick2) =
 	let player1 = List.assoc nick1 players in
 	let player2 = List.assoc nick2 players in
-	let update result = k *. (result -. get_expectation player1.rating player2.rating) in
+	let update result = G.k *. (result -. G.get_expectation player1.rating player2.rating) in
 	update 1., update 0.5, update 0.
 
 let suggested_matches nicks stats =
@@ -448,6 +458,11 @@ let string_of_heading ?(gh_pages = false) heading =
 let string_of_section lines =
 	let lines = List.map (fun line -> "    " ^ line) lines in
 	String.concat "\n" lines
+
+end
+
+module L = Ladder(Chess)
+open L
 
 let print_summary title players_path games_path rev_chron gh_pages =
 	let players = read_players players_path in
