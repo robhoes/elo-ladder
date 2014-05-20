@@ -1,9 +1,8 @@
 (* Elo rating calculations *)
 
 module type GAMETYPE = sig
-	val k : float
-	val get_expectation : float -> float -> float
 	val get_updates : float -> float -> float -> float * float
+	val get_stakes : float -> float -> float * float * float
 end
 
 module Chess : GAMETYPE = struct
@@ -22,6 +21,10 @@ module Chess : GAMETYPE = struct
 		let update = k *. (result -. expectation) in
 		rating1 +. update,
 		rating2 -. update
+
+	let get_stakes rating1 rating2 =
+		let update result = k *. (result -. get_expectation rating1 rating2) in
+		update 1., update 0.5, update 0.
 end
 
 (* ladder *)
@@ -318,8 +321,7 @@ let rec setify = function
 let get_stakes players (nick1, nick2) =
 	let player1 = List.assoc nick1 players in
 	let player2 = List.assoc nick2 players in
-	let update result = G.k *. (result -. G.get_expectation player1.rating player2.rating) in
-	update 1., update 0.5, update 0.
+	G.get_stakes player1.rating player2.rating
 
 let suggested_matches nicks stats =
 	let count_limit = match stats with [] -> 0 | (_, (c, _, _, _, _)) :: _ -> c + 1 in
