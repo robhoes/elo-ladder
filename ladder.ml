@@ -27,6 +27,22 @@ module Chess : GAMETYPE = struct
 		update 1., update 0.5, update 0.
 end
 
+module Backgammon : GAMETYPE = struct
+	let get_expectation rating1 rating2 sqrtlen =
+		let ratingdiff = rating2 -. rating1 in
+		let exponent = ratingdiff *. sqrtlen /. 2000. in
+		1. /. (1. +. 10. ** exponent)
+
+	let get_updates rating1 rating2 len result =
+		let sqrtlen = sqrt (float_of_int len) in
+		let expectation = get_expectation rating1 rating2 sqrtlen in
+		let update = 4. *. sqrtlen *. (result -. expectation) in
+		rating1 +. update,
+		rating2 -. update
+
+	let get_stakes _ _ = 0., 0., 0.
+end
+
 (* ladder *)
 
 module Date = struct
