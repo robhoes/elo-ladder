@@ -1,11 +1,14 @@
 (* Elo rating calculations *)
 
 module type GAMETYPE = sig
+	val description : string
 	val get_updates : float -> float -> int -> float -> float * float
 	val get_stakes : float -> float -> float * float * float
 end
 
 module Chess : GAMETYPE = struct
+	let description = "XenServer Chess Ladder"
+
 	let k = 32.
 
 	let get_factor rating =
@@ -28,6 +31,8 @@ module Chess : GAMETYPE = struct
 end
 
 module Backgammon : GAMETYPE = struct
+	let description = "XenServer Backgammon Ladder"
+
 	let get_expectation rating1 rating2 sqrtlen =
 		let ratingdiff = rating2 -. rating1 in
 		let exponent = ratingdiff *. sqrtlen /. 2000. in
@@ -173,7 +178,7 @@ let gnuplot_strings_of_history players =
 	let open Printf in
 	let preamble = [
 		"set term pngcairo size 1920,1080 linewidth 1.75 enhanced font \"Droid Sans,18\"";
-		"set title 'XenServer Chess Ladder' font \"Droid Sans,34\"";
+		"set title '" ^ G.description ^ "' font \"Droid Sans,34\"";
 		"set xtics format''";
 		"set key rmargin bottom reverse Left";
 		"set datafile separator '\\t'";
