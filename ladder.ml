@@ -119,8 +119,9 @@ let strings_of_games ~rev_chron players games =
 		List.map (fun (date, nick1, nick2, len, result) ->
 			let player1 = List.assoc nick1 players in
 			let player2 = List.assoc nick2 players in
-			Printf.sprintf "%s: %20s - %-20s    %s"
+			Printf.sprintf "%s: %20s - %-20s%s    %s"
 				(Date.string_of date) player1.name player2.name
+				(if len > 0 then Printf.sprintf "  (%d)" len else "")
 				(string_of_result result)
 		) games
 	in
