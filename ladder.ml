@@ -605,14 +605,17 @@ let help_secs = [
 		    starting rating for the player as an integer, and active indicates
 		    whether the player is retired or not.";
 		`I ("Example:", "magnus,Magnus Carlsen,2870,true");
+		`I ("Example:", "X-22,Paul Magriel,1870,true");
 		`P ""; `Noblank;
 		`P "The $(i,GAMES) file should be in CSV format:";
-		`I ("Syntax:", "<Date>,<White's $(i,ID)>,<Black's $(i,ID)>,<$(i,RES)>");
+		`I ("Syntax:", "<Date>,<Player 1's $(i,ID)>,<Player 2's $(i,ID)>[,<$(i,LENGTH)>],<$(i,RES)>");
 		`P "Where the date is in ISO 8601 format (yyyy-mm-dd); $(i,ID)s
 		    match those listed in the $(i,PLAYERS) file; and $(i,RES) is
 		    either $(i,1), $(i,.5) or $(i,0) in the case of a win, draw
-		    or loss for white respectively.";
+		    or loss for Player 1 respectively. For backgammon games, $(i,LENGTH)
+		    is the match length (winning score); it may be omitted for chess games.";
 		`I ("Example:", "2013-11-21,magnus,anand,.5");
+		`I ("Example:", "2013-11-21,X-22,robertie,7,1");
 	`S "BUGS";
 		`I ("Please report bugs by opening an issue on the Elo-ladder
 		     project page on Github:",
