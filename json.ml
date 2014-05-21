@@ -21,6 +21,7 @@ type t =
 	| Array of t list
 	| String of string
 	| Number of float
+	| Integer of int
 	| Boolean of bool
 	| Empty
 
@@ -34,6 +35,7 @@ let to_string x =
 		| Array l -> "[ " ^ (String.concat ", " (List.map (fun j -> (to_string' n j)) l)) ^ " ]"
 		| String s -> "\"" ^ (escape s) ^ "\""
 		| Number n -> Printf.sprintf "%.4f" n
+		| Integer x -> string_of_int x
 		| Boolean b -> if b then "true" else "false"
 		| Empty -> "\"\""
 	in

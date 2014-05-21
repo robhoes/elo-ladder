@@ -132,6 +132,7 @@ let json_of_game date name1 name2 len result =
 		"date", String (Date.string_of date);
 		"name1", String name1;
 		"name2", String name2;
+		"length", Integer len;
 		"result", Number result;
 	]
 	
