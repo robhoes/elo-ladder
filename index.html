@@ -1,0 +1,47 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<script type="text/javascript" src="ladder.json"></script>
+	<script type="text/javascript" src="ladder.js"></script>
+	<link rel="stylesheet" href="style.css" />
+</head>
+<body onload="build()">
+<div class="wrapper">
+<header>
+	<h2 id="getting_involved">Join the club</h2>
+
+	<p>This page is automatically updated as a result of editing files in the following repository:</p>
+
+	<ul>
+		<li><a href="https://github.com/robhoes/elo-ladder/edit/master/players">Add a <strong>Player</strong></a></li>
+		<li><a href="https://github.com/robhoes/elo-ladder/edit/master/games">Add a <strong>Game</strong></a></li>
+		<li><a href="http://github.com/robhoes/elo-ladder">View the <strong>Readme</strong></a></li>
+	</ul>
+
+	<p>To join the ladder, add yourself to the <a href="https://github.com/robhoes/elo-ladder/edit/master/games"><strong><em>players</em></strong></a> file with a starting rating of 1500.</p>
+
+	<p>To add the result of a game, edit the <a href="https://github.com/robhoes/elo-ladder/edit/master/games"><strong><em>games</em></strong></a> file in the same repository.</p>
+
+	<p>Both of these can be done by using Github’s web interface (use the buttons above).</p>
+
+	<p><strong>Ladder matches are 15 minute games</strong></p>
+	<hr>
+	<p>This project is maintained by <a href="https://github.com/robhoes">robhoes</a> and <a href="https://github.com/simonjbeaumont">simonjbeaumont</a>. This page is hosted on GitHub Pages.</p>
+</header>
+
+<section>
+	<h1>XenServer Chess Ladder</h1>
+	
+	<ul>
+		<li><a onclick="build_ladder()">Show <strong>Ladder</strong></a></li>
+		<li><a onclick="build_games()">Past <strong>Games</strong></a></li>
+		<li><a onclick="build_suggestions()">Next <strong>Games</strong></a></li>
+		<li><a onclick="build_graph()">Show <strong>Graph</strong></a></li>
+		<li><a onclick="build_stats()">Show <strong>Stats</strong></a></li>
+	</ul>
+
+	<div id="results" />
+</section>
+</div>
+</body>
+</html>
