@@ -462,7 +462,7 @@ let read_games path =
 	let id = ref 0 in
 	let parse_game_line line =
 		if line <> "" && line.[0] <> '#' then begin
-			id := succ !id;
+			incr id;
 			try
 				Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%d,%f"
 					(fun yyyy mm dd nick_w nick_b len res -> Some (Date.({id=(!id); y=yyyy; m=mm; d=dd}), nick_w, nick_b, len, res)
