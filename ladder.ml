@@ -429,19 +429,26 @@ let line_stream_of_channel channel =
 
 let read_players path =
 	let long_time_ago = Date.({id = 0; y = 1970; m = 1; d = 1}) in
-	let parse_player_line id line =
-		Scanf.sscanf line "%s@,%s@,%f,%b"
-			(fun nick name rating active ->
-				nick, {name; rating; history = [long_time_ago, rating]; game_count = 0; points_won = 0.; active; id})
+	let id = ref 0 in
+	let parse_player_line line =
+		if line <> "" && line.[0] <> '#' then begin
+			incr id;
+			Scanf.sscanf line "%s@,%s@,%f,%b"
+				(fun nick name rating active ->
+					Some (nick, {name; rating; history = [long_time_ago, rating]; game_count = 0; points_won = 0.; active; id=(!id)})
+				)
+		end else
+			None
 	in
 	let in_channel = open_in path in
 	let players = ref [] in
-	let id = ref 0 in
 	begin
 		try
 			Stream.iter (fun line ->
-				id := succ !id;
-				players := parse_player_line !id line :: !players)
+				match parse_player_line line with
+				| Some player -> players := player :: !players
+				| None -> ()
+				)
 				(line_stream_of_channel in_channel);
 			close_in in_channel;
 		with e ->
@@ -454,23 +461,29 @@ let read_players path =
 let read_games path =
 	let id = ref 0 in
 	let parse_game_line line =
-		id := succ !id;
-		try
-			Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%d,%f"
-				(fun yyyy mm dd nick_w nick_b len res -> Date.({id=(!id); y=yyyy; m=mm; d=dd}), nick_w, nick_b, len, res
-			)
-		with _ ->
-			(* if we don't have a length field, then use 0 *)
-			Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%f"
-				(fun yyyy mm dd nick_w nick_b res -> Date.({id=(!id); y=yyyy; m=mm; d=dd}), nick_w, nick_b, 0, res
-			)
+		if line <> "" && line.[0] <> '#' then begin
+			id := succ !id;
+			try
+				Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%d,%f"
+					(fun yyyy mm dd nick_w nick_b len res -> Some (Date.({id=(!id); y=yyyy; m=mm; d=dd}), nick_w, nick_b, len, res)
+				)
+			with _ ->
+				(* if we don't have a length field, then use 0 *)
+				Scanf.sscanf line "%4d-%2d-%2d,%s@,%s@,%f"
+					(fun yyyy mm dd nick_w nick_b res -> Some (Date.({id=(!id); y=yyyy; m=mm; d=dd}), nick_w, nick_b, 0, res)
+				)
+		end else
+			None
 	in
 	let in_channel = open_in path in
 	let games = ref [] in
 	begin
 		try
-			Stream.iter (fun line ->
-				games := parse_game_line line :: !games)
+			Stream.iter (function line ->
+				match parse_game_line line with
+				| Some game -> games := game :: !games
+				| None -> ()
+				)
 				(line_stream_of_channel in_channel);
 			close_in in_channel
 		with e ->
