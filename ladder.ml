@@ -48,9 +48,12 @@ module Backgammon : GAMETYPE = struct
 	let get_stakes _ _ = 0., 0., 0.
 end
 
+module Pool : GAMETYPE = Chess
+
 let get_ladder = function
-	| s when s = `Chess -> (module Chess : GAMETYPE)
-	| s when s = `Backgammon -> (module Backgammon : GAMETYPE)
+	| `Chess -> (module Chess : GAMETYPE)
+	| `Backgammon -> (module Backgammon : GAMETYPE)
+	| `Pool -> (module Pool : GAMETYPE)
 	| _ -> failwith "unknown game type"
 
 
@@ -634,9 +637,9 @@ let help_secs = [
 		     project page on Github:",
 		    "https://github.com/robhoes/elo-ladder"); ]
 
-let ladder : [ `Chess | `Backgammon ] Term.t =
-	let doc = "The type of game; either `chess' or `backgammon'." in
-	let fmt = Arg.enum ["chess", `Chess; "backgammon", `Backgammon] in
+let ladder : [ `Chess | `Backgammon | `Pool ] Term.t =
+	let doc = "The type of game; either `chess', `backgammon' or `pool'." in
+	let fmt = Arg.enum ["chess", `Chess; "backgammon", `Backgammon; "pool", `Pool] in
 	Arg.(value & opt fmt `Chess & info ["game"] ~doc)
 
 let players_path =
