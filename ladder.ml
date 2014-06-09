@@ -48,7 +48,10 @@ module Backgammon : GAMETYPE = struct
 	let get_stakes _ _ = 0., 0., 0.
 end
 
-module Pool : GAMETYPE = Chess
+module Pool : GAMETYPE = struct
+	include Chess
+	let description = "XenServer Pool Ladder"
+end
 
 let get_ladder = function
 	| `Chess -> (module Chess : GAMETYPE)
